@@ -1,0 +1,2187 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# 🚀 INSTAGRAM MULTI-AGENT CONTENT FACTORY\n🔎 Research → ✅ Validator → 🧠 Strategist → 🎨 Creative → 📤 Publisher/QA → 🖼️ Image Studio → 📸 Instagram\n\n**Run:** open the **Content Form** URL, or POST JSON to the webhook `/ig-content-factory`.\n\n**Formats:** `script` (Telegram only) · `carousel` · `image`\n\n**Posting:** controlled by `auto_post` in *Instagram Settings*.",
+        "height": 330,
+        "width": 700,
+        "color": 7
+      },
+      "id": "d1336e6d-667f-4d30-b7ac-c9e8f46a5657",
+      "name": "Note 0",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ig-content-factory",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "7e0b1192-a0cb-4621-9b99-90144bbe53b9",
+      "name": "Webhook (POST /ig-content-factory)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        1456
+      ],
+      "webhookId": "c002e287-fa5d-4402-8d6c-e33adcbf55a2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "55f6a804-3a21-4d11-9ada-ce83ee904be2",
+              "name": "niche",
+              "type": "string",
+              "value": "={{ $json.body?.niche || 'AI automation and n8n for beginners' }}"
+            },
+            {
+              "id": "9061d900-2492-4c79-b469-52c359c5a0fe",
+              "name": "audience",
+              "type": "string",
+              "value": "={{ $json.body?.audience || 'Non-technical Indian learners, students and freelancers' }}"
+            },
+            {
+              "id": "00e55631-6dcd-415e-a074-9d80fa22f80a",
+              "name": "language",
+              "type": "string",
+              "value": "={{ $json.body?.language || 'Hinglish (Hindi written in English letters, simple and friendly)' }}"
+            },
+            {
+              "id": "4cc6e04a-53b8-4421-911e-0fe2606acaad",
+              "name": "brand_voice",
+              "type": "string",
+              "value": "={{ $json.body?.brand_voice || 'Friendly teacher, simple words, practical, no jargon, energetic but not hype-y' }}"
+            },
+            {
+              "id": "ce632bfa-da5e-4e40-abdd-f532cd7b2019",
+              "name": "format",
+              "type": "string",
+              "value": "={{ $json.body?.format || 'carousel' }}"
+            },
+            {
+              "id": "4d225e3e-8b81-467c-bc1e-09cd6ca865ec",
+              "name": "geo",
+              "type": "string",
+              "value": "={{ $json.body?.geo || 'IN' }}"
+            },
+            {
+              "id": "e7a75c9b-206f-4902-92b9-cc8396c41584",
+              "name": "instructions",
+              "type": "string",
+              "value": "={{ $json.body?.instructions || 'Ideas must be directly relevant to the niche and useful to the audience. Avoid politics, religion, tragedies, adult, medical or financial guarantees, and anything unverifiable. Prefer practical how-to / tips / explainers. Must be genuinely trending or seasonal right now. No copyrighted characters or real-person likeness.' }}"
+            },
+            {
+              "id": "ed33010f-5dd3-4ebe-9c48-a9617ec1b47c",
+              "name": "imgbb_api_key",
+              "type": "string",
+              "value": "0b19ae9eaa0f59ec089a1100d9805cb1"
+            },
+            {
+              "id": "4fb4599f-eb70-47ae-8ff4-4742285a58c3",
+              "name": "image_model",
+              "type": "string",
+              "value": "={{ $json.body?.image_model || 'gemini-2.5-flash-image' }}"
+            },
+            {
+              "id": "f12ed8ed-28a9-407e-9b11-e37b06006a86",
+              "name": "topic",
+              "type": "string",
+              "value": "={{ $json.body?.topic || '' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5522da23-c804-4567-b95d-e370da631b5f",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2144,
+        1360
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🔎 AGENT 1 — RESEARCH\nFinds what is trending right now.\n**Tool:** Google Trends RSS (free, no key).\n**Output:** 8 ranked content ideas.\n_Upgrade: add Apify Instagram scraper as 2nd tool._",
+        "height": 150,
+        "width": 440,
+        "color": 4
+      },
+      "id": "b2958465-ddc3-400c-987f-af7f351be890",
+      "name": "Note 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Fetches today's trending searches (RSS/XML) for the configured country. Use it to see what people are searching for right now.",
+        "url": "=https://trends.google.com/trending/rss?geo={{ $('Config').item.json.geo }}"
+      },
+      "id": "017cae8a-53d0-41b5-9730-abbf1252b030",
+      "name": "Tool: Google Trends RSS",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        2496,
+        1584
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"ideas\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"topic\": {\n            \"type\": \"string\"\n          },\n          \"angle\": {\n            \"type\": \"string\"\n          },\n          \"why_trending\": {\n            \"type\": \"string\"\n          },\n          \"virality_score\": {\n            \"type\": \"number\",\n            \"description\": \"1-10\"\n          }\n        },\n        \"required\": [\n          \"topic\",\n          \"angle\",\n          \"why_trending\",\n          \"virality_score\"\n        ]\n      }\n    }\n  },\n  \"required\": [\n    \"ideas\"\n  ]\n}"
+      },
+      "id": "e2ce895e-363c-459b-a4fc-822f37259ed7",
+      "name": "Parser (Research)",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        2624,
+        1584
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.topic ? 'USER TOPIC: ' + $json.topic : 'Niche: ' + $json.niche }}\nAudience: {{ $json.audience }}\nCountry code: {{ $json.geo }}\n\n{{ $json.topic ? 'Produce 8 Instagram content ideas that are all different angles on the USER TOPIC only. Do not connect it to any other subject or tool.' : 'Use the Google Trends tool, then produce 8 Instagram content ideas for this niche.' }} Rank them by virality_score.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the RESEARCH AGENT in a 4-agent Instagram content team. Your job: discover trending topics and connect them to the niche. When no user topic is given, call the trends tool first. When no user topic is given, connect trending themes to the niche. Only suggest ideas that are useful, factual and safe. Be concise. Return only the structured output. TOPIC RULE: when a USER TOPIC is given, it overrides the niche. Stay strictly on that topic exactly as written. Never add n8n, automation, or any other tool, product or angle that the user topic does not mention."
+        }
+      },
+      "id": "bef62626-02a1-4ffd-9ceb-210fb9c227cd",
+      "name": "Research Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        2424,
+        1360
+      ],
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "content": "## 🧠 AGENT 2 — STRATEGIST\nPicks the single best idea and writes hook, script, caption, hashtags in brand voice.",
+        "height": 150,
+        "width": 560,
+        "color": 5
+      },
+      "id": "1981d30a-92bd-4df5-9f6e-d6f5fac56a58",
+      "name": "Note 9",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3392,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.6-flash",
+        "options": {
+          "maxOutputTokens": 8192,
+          "temperature": 0.7
+        }
+      },
+      "id": "a52e3540-431a-4822-b4b3-557c9057e411",
+      "name": "Gemini (Strategist)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        3304,
+        1584
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "b8n8SDngiK2O7jtj",
+          "name": "phazeai gemini api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"chosen_topic\": {\n      \"type\": \"string\"\n    },\n    \"why_chosen\": {\n      \"type\": \"string\"\n    },\n    \"hook\": {\n      \"type\": \"string\"\n    },\n    \"script_scenes\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"scene\": {\n            \"type\": \"number\"\n          },\n          \"visual\": {\n            \"type\": \"string\"\n          },\n          \"voiceover\": {\n            \"type\": \"string\"\n          }\n        }\n      }\n    },\n    \"caption\": {\n      \"type\": \"string\"\n    },\n    \"hashtags\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"cta\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"chosen_topic\",\n    \"hook\",\n    \"script_scenes\",\n    \"caption\",\n    \"hashtags\",\n    \"cta\"\n  ]\n}"
+      },
+      "id": "d493a87a-2303-4ae3-af74-02c791b40377",
+      "name": "Parser (Strategist)",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        3432,
+        1584
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Config').item.json.topic ? 'USER TOPIC: ' + $('Config').item.json.topic + '\\n\\n' : '' }}VALIDATED ideas (already checked against our instructions, best first):\n{{ JSON.stringify($('Validator Agent').item.json.output.approved_ideas) }}\n\nBrand voice: {{ $('Config').item.json.brand_voice }}\nLanguage: {{ $('Config').item.json.language }}\nAudience: {{ $('Config').item.json.audience }}\nFormat: {{ $('Config').item.json.format }}\n\nPick the ONE best idea and write the full content plan.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the STRATEGIST AGENT. Choose the single idea with best audience fit + virality. Write: a scroll-stopping hook (max 12 words), a 5-7 scene script (30-45s) with visual + voiceover per scene, an engaging caption (max 1500 chars, first line = hook), 15-20 mixed-size hashtags (each starting with #), and one clear CTA that fits the topic (e.g. 'Save this for later'). Write in the requested language and voice. One idea only. Return only the structured output. TOPIC RULE: when a USER TOPIC is given, it overrides the niche. Stay strictly on that topic exactly as written. Never add n8n, automation, or any other tool, product or angle that the user topic does not mention. Do not invent product features, setup steps, prices or statistics; if you are unsure a detail is real, keep it general."
+        }
+      },
+      "id": "8d14c574-fcdd-4d6d-a19f-2bffcbaf5960",
+      "name": "Strategist Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        3296,
+        1360
+      ],
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "content": "## 🎨 AGENT 3 — CREATIVE\nTurns the script into carousel slides, cover, image prompts and reel shot list.\n_Upgrade: connect an image API (Canva/Templated/DALL·E) to render the prompts._",
+        "height": 150,
+        "width": 640,
+        "color": 6
+      },
+      "id": "eb46a40f-134f-4538-9f45-cc0dd2d289ee",
+      "name": "Note 13",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4000,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.6-flash",
+        "options": {
+          "maxOutputTokens": 8192,
+          "temperature": 0.7
+        }
+      },
+      "id": "2067ccb8-f544-4ece-a132-4ddcdb254f6d",
+      "name": "Gemini (Creative)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        3656,
+        1584
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "b8n8SDngiK2O7jtj",
+          "name": "phazeai gemini api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"cover\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"headline\": {\n          \"type\": \"string\"\n        },\n        \"image_prompt\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"slides\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"slide\": {\n            \"type\": \"number\"\n          },\n          \"headline\": {\n            \"type\": \"string\"\n          },\n          \"body\": {\n            \"type\": \"string\"\n          },\n          \"image_prompt\": {\n            \"type\": \"string\"\n          }\n        }\n      }\n    },\n    \"reel_shot_list\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"visual_style\": {\n      \"type\": \"string\"\n    },\n    \"alt_text\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"cover\",\n    \"slides\",\n    \"visual_style\",\n    \"alt_text\"\n  ]\n}"
+      },
+      "id": "3702080d-010d-4d03-bfa1-f46695d03c48",
+      "name": "Parser (Creative)",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        3784,
+        1584
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Content plan:\n{{ JSON.stringify($('Strategist Agent').item.json.output) }}\n\nBrand voice: {{ $('Config').item.json.brand_voice }}\nFormat: {{ $('Config').item.json.format }}\n\nCreate the visual assets plan.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the CREATIVE AGENT. Convert the content plan into: a cover (bold headline max 6 words + a detailed image prompt), 4-6 carousel slides (headline max 6 words, body max 25 words, plus a detailed image_prompt each), a reel shot list, one consistent visual_style (colors, fonts, mood) and accessible alt text. Image prompts are for a Gemini image model that renders TEXT well: describe composition, subject, colors, lighting and leave clean space for the headline; the headline itself is added automatically from the 'headline' field, so do not repeat it in image_prompt. Keep every slide visually consistent with visual_style. No copyrighted characters, no real people, no logos. Return only the structured output."
+        }
+      },
+      "id": "842b268b-c297-4df0-9788-c8078b0fee3a",
+      "name": "Creative Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        3648,
+        1360
+      ],
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "content": "## 📤 AGENT 4 — PUBLISHER / QA\nQuality-checks everything, fixes issues, then sends a preview for human approval. Posting to Instagram is the last step (disabled until token added).",
+        "height": 150,
+        "width": 2308,
+        "color": 3
+      },
+      "id": "bc00e7e1-f238-4d08-939d-c6b5cc6437ef",
+      "name": "Note 17",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        6128,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.6-flash",
+        "options": {
+          "maxOutputTokens": 8192,
+          "temperature": 0.7
+        }
+      },
+      "id": "8fcf4815-382c-4cf4-babc-9698c0f48dd9",
+      "name": "Gemini (Publisher QA)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        4008,
+        1584
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "b8n8SDngiK2O7jtj",
+          "name": "phazeai gemini api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"approved\": {\n      \"type\": \"boolean\"\n    },\n    \"quality_score\": {\n      \"type\": \"number\",\n      \"description\": \"1-10\"\n    },\n    \"issues_found\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"final_caption\": {\n      \"type\": \"string\"\n    },\n    \"final_hashtags\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"best_post_time\": {\n      \"type\": \"string\"\n    },\n    \"summary_for_human\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"approved\",\n    \"quality_score\",\n    \"final_caption\",\n    \"final_hashtags\",\n    \"summary_for_human\"\n  ]\n}"
+      },
+      "id": "e4523c68-3137-4a99-a73f-3a2f4edb270f",
+      "name": "Parser (Publisher QA)",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        4136,
+        1584
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Hook: {{ $('Strategist Agent').item.json.output.hook }}\nCaption: {{ $('Strategist Agent').item.json.output.caption }}\nHashtags: {{ $('Strategist Agent').item.json.output.hashtags.join(' ') }}\nCTA: {{ $('Strategist Agent').item.json.output.cta }}\nSlides: {{ JSON.stringify($('Creative Agent').item.json.output.slides) }}\nLanguage: {{ $('Config').item.json.language }}\n\nRun QA and produce the final publish package.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the PUBLISHER/QA AGENT. Check: caption <= 2200 chars, hashtags <= 30 and each starts with '#', no misleading/false claims, no banned or spammy phrases, hook is strong, tone matches brand, CTA present. Fix problems yourself in final_caption/final_hashtags. Set approved=true only if quality_score >= 7 after fixes. Suggest best_post_time (IST) for Indian audience. Write a 2-line summary_for_human. Return only the structured output."
+        }
+      },
+      "id": "1ff8bc22-3ad5-4d6f-9c00-4ef0b4fa86d9",
+      "name": "Publisher QA Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        4000,
+        1360
+      ],
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8d232797-50e9-4660-a7ca-223a17f5a060",
+              "name": "status",
+              "type": "string",
+              "value": "={{ $json.output.approved ? 'READY_FOR_APPROVAL' : 'NEEDS_REVISION' }}"
+            },
+            {
+              "id": "38b65f6b-542c-4c9e-b7ff-89cba07d84f7",
+              "name": "topic",
+              "type": "string",
+              "value": "={{ $('Strategist Agent').item.json.output.chosen_topic }}"
+            },
+            {
+              "id": "2546cab9-9fc5-45c4-8dc5-9a440c86913c",
+              "name": "hook",
+              "type": "string",
+              "value": "={{ $('Strategist Agent').item.json.output.hook }}"
+            },
+            {
+              "id": "0f9daf35-f732-44f1-9168-42d53a6ea933",
+              "name": "caption",
+              "type": "string",
+              "value": "={{ $json.output.final_caption + '\\n\\n' + $json.output.final_hashtags.join(' ') }}"
+            },
+            {
+              "id": "c1c29a3f-c551-4cea-8e0d-4caff2364a3f",
+              "name": "quality_score",
+              "type": "number",
+              "value": "={{ $json.output.quality_score }}"
+            },
+            {
+              "id": "12d6c4f4-1c2f-4624-8527-4a21033412b5",
+              "name": "best_post_time",
+              "type": "string",
+              "value": "={{ $json.output.best_post_time }}"
+            },
+            {
+              "id": "efc0f37c-5b94-4a51-b8e8-f22d6cf27df7",
+              "name": "summary",
+              "type": "string",
+              "value": "={{ $json.output.summary_for_human }}"
+            },
+            {
+              "id": "3c440624-fa76-437e-adc9-c5e2eecc56dc",
+              "name": "cover_prompt",
+              "type": "string",
+              "value": "={{ $('Creative Agent').item.json.output.cover.image_prompt }}"
+            },
+            {
+              "id": "a49ea491-cf26-41c1-94c1-3777b871158b",
+              "name": "slides",
+              "type": "array",
+              "value": "={{ $('Creative Agent').item.json.output.slides }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fc38c356-f8a5-4c0f-acbc-ea7c655eca32",
+      "name": "Final Package",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4352,
+        1360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b48b099e-f188-4f83-a589-165b2af2da16",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "READY_FOR_APPROVAL",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "68a2232d-97bf-4844-aacc-bcc2cc6b385d",
+      "name": "Approved by QA?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4576,
+        1456
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "1464300930",
+        "text": "=📣 NEW POST READY (score {{ $('Final Package').first().json.quality_score }}/10)\n\n🧠 Topic: {{ $('Final Package').first().json.topic }}\n🎣 Hook: {{ $('Final Package').first().json.hook }}\n⏰ Best time: {{ $('Final Package').first().json.best_post_time }}\n\n📝 Caption:\n{{ $('Final Package').first().json.caption }}\n\n🖼 Cover prompt: {{ $('Final Package').first().json.cover_prompt }}\n\n{{ $('Final Package').first().json.summary }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "73af5b9b-984c-443b-9127-32ccc637dedc",
+      "name": "Telegram: Send Preview",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        6144,
+        1360
+      ],
+      "webhookId": "38e2b681-e102-469e-a78e-ed841f396dbd",
+      "credentials": {
+        "telegramApi": {
+          "id": "Jx8AgPVooomTacHF",
+          "name": "Harshal telegram api"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "id": "5f84e448-3856-4a57-9699-61984058bdd8",
+      "name": "Sent back for revision",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4800,
+        1552
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8bcf1996-ca94-4b27-a726-1ae53608bc51",
+              "name": "composio_instagram_account_id",
+              "type": "string",
+              "value": "ca_Ns70iscGW4ni"
+            },
+            {
+              "id": "ea279764-e98f-44c6-869f-a767b38bc032",
+              "name": "composio_entity_id",
+              "type": "string",
+              "value": "pg-test-c5392bb0-0620-42a0-aec0-5fc7e67f28b4"
+            },
+            {
+              "id": "a392b1e6-2d19-4df6-86e1-b6ec8de8f64d",
+              "name": "auto_post",
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "id": "1843b764-4d60-4044-a14f-57f537483c5e",
+              "name": "post_format",
+              "type": "string",
+              "value": "={{ String($('Config').item.json.format).toLowerCase() }}"
+            },
+            {
+              "id": "443c6952-e832-4d00-ac4c-01caf353390e",
+              "name": "caption",
+              "type": "string",
+              "value": "={{ $('Final Package').first().json.caption }}"
+            },
+            {
+              "id": "821299fc-e28f-4841-a5d5-9541247f2844",
+              "name": "video_url",
+              "type": "string",
+              "value": "PASTE_PUBLIC_MP4_URL_FOR_REELS (only needed when format=reel)"
+            },
+            {
+              "id": "75febad9-d80b-4002-a13a-5e29bfa3ee50",
+              "name": "cover_url",
+              "type": "string",
+              "value": "={{ $('Collect Image URLs').first().json.cover_url }}"
+            },
+            {
+              "id": "2e3e1580-f275-48a9-8360-9c516e3c89b1",
+              "name": "carousel_image_urls",
+              "type": "array",
+              "value": "={{ $('Collect Image URLs').first().json.urls }}"
+            },
+            {
+              "id": "77be105b-5bee-4e2b-8cd3-88271bece0cc",
+              "name": "image_url",
+              "type": "string",
+              "value": "={{ $('Collect Image URLs').first().json.urls[0] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "84d90c7e-6ccb-41d7-813b-9f2e4ad39a5c",
+      "name": "Instagram Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6592,
+        1360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "154045a7-fdc2-435c-8022-6bbd3275e516",
+              "leftValue": "={{ $json.auto_post }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "59c003fb-c22b-473b-a87c-f6e5a56e7af3",
+      "name": "Auto-post enabled?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        6816,
+        1360
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "1d78f560-bc88-497e-83d1-f378026e041b",
+      "name": "Stop: waiting for manual approval",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        7040,
+        1456
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backend.composio.dev/api/v3/tools/execute/INSTAGRAM_GET_USER_INFO",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ connected_account_id: $('Instagram Settings').first().json.composio_instagram_account_id, entity_id: $('Instagram Settings').first().json.composio_entity_id, arguments: {} }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "5650d3ef-de99-4850-ae03-c514642fa367",
+      "name": "Get IG Account (Composio)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        7040,
+        1264
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JhnYRu7tX00Km4uC",
+          "name": "harshal instagram composeio"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2ecd587d-2ac8-4d6d-9658-1d4ceb6ffa61",
+                    "leftValue": "={{ $('Instagram Settings').first().json.post_format }}",
+                    "rightValue": "carousel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "be970bfa-c2f4-4bcf-8e89-57494497befd",
+                    "leftValue": "={{ $('Instagram Settings').first().json.post_format }}",
+                    "rightValue": "reel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "575f6ce9-118f-4f20-99e0-e461554d4e93",
+                    "leftValue": "={{ $('Instagram Settings').first().json.post_format }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3b2b4d10-139b-4786-a53d-42b628222776",
+      "name": "Post Format?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        7264,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## ✅ AGENT 2 — VALIDATOR\nChecks every trending idea against OUR instructions (niche fit, safety, factual, really trending). Approves, rejects with reasons, and scores fit. Only approved ideas reach the Strategist.",
+        "height": 150,
+        "width": 520,
+        "color": 3
+      },
+      "id": "408bc1c0-e25c-45fb-9328-1360a442110a",
+      "name": "Note Validator",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2816,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.6-flash",
+        "options": {
+          "maxOutputTokens": 8192,
+          "temperature": 0.2
+        }
+      },
+      "id": "8ff4fc90-a7b5-4c87-b674-7443c32af068",
+      "name": "Gemini (Validator)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2832,
+        1584
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "b8n8SDngiK2O7jtj",
+          "name": "phazeai gemini api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"approved_ideas\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"topic\": {\n            \"type\": \"string\"\n          },\n          \"angle\": {\n            \"type\": \"string\"\n          },\n          \"why_trending\": {\n            \"type\": \"string\"\n          },\n          \"virality_score\": {\n            \"type\": \"number\"\n          },\n          \"fit_score\": {\n            \"type\": \"number\",\n            \"description\": \"1-10 fit with our instructions\"\n          },\n          \"reason\": {\n            \"type\": \"string\"\n          }\n        },\n        \"required\": [\n          \"topic\",\n          \"angle\",\n          \"fit_score\",\n          \"reason\"\n        ]\n      }\n    },\n    \"rejected_ideas\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"topic\": {\n            \"type\": \"string\"\n          },\n          \"reason\": {\n            \"type\": \"string\"\n          }\n        }\n      }\n    },\n    \"validation_summary\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"approved_ideas\",\n    \"rejected_ideas\",\n    \"validation_summary\"\n  ]\n}"
+      },
+      "id": "2caa5ae6-410f-4689-bfa2-8cf828aa7b51",
+      "name": "Parser (Validator)",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        3088,
+        1584
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Fetches today's trending searches (RSS/XML) for the configured country. Use it to verify that an idea is genuinely trending.",
+        "url": "=https://trends.google.com/trending/rss?geo={{ $('Config').item.json.geo }}"
+      },
+      "id": "51163a42-92d9-4120-ba13-e65a202def43",
+      "name": "Tool: Google Trends (Validator)",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        2960,
+        1584
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=OUR INSTRUCTIONS (must all be satisfied):\n{{ $('Config').item.json.instructions }}\n\n{{ $('Config').item.json.topic ? 'USER TOPIC: ' + $('Config').item.json.topic : 'Niche: ' + $('Config').item.json.niche }}\nAudience: {{ $('Config').item.json.audience }}\nBrand voice: {{ $('Config').item.json.brand_voice }}\nCountry: {{ $('Config').item.json.geo }}\n\nTrending ideas from the Research Agent:\n{{ JSON.stringify($('Research Agent').item.json.output.ideas) }}\n\nValidate every idea. Use the trends tool to verify the claim that it is trending.{{ $('Config').item.json.topic ? '\\n\\nA user topic is given: wherever the instructions say niche, read it as the USER TOPIC. Do NOT reject ideas for not being trending. REJECT any idea that adds a tool, product or subject the user topic does not mention.' : '' }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the VALIDATOR AGENT, a strict editor. For each idea check: (1) relevant to the niche and useful to the audience, (2) obeys every line of OUR INSTRUCTIONS, (3) the 'trending' claim is real - verify with the trends tool, do not trust blindly, (4) safe, factual, not misleading, (5) can become an engaging Instagram post. Approve only ideas that pass all checks and give each a fit_score (1-10) and a one-line reason. Reject the rest with the exact reason. Return approved_ideas sorted best first (at most 5). If fewer than 2 pass, keep the 2 closest and say so in validation_summary. Return only the structured output. TOPIC RULE: when a USER TOPIC is given, it overrides the niche. Stay strictly on that topic exactly as written. Never add n8n, automation, or any other tool, product or angle that the user topic does not mention."
+        }
+      },
+      "id": "e03869da-cfaf-4748-b1fc-366c3d71944c",
+      "name": "Validator Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        2888,
+        1360
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🖼️ IMAGE STUDIO\nGemini image model creates the finished post image(s) (cover + slides, headline included) → converts to Instagram JPEG → uploads to imgbb to get a **public URL** → preview goes to Telegram → posted via Composio.\nNeeds a free imgbb API key (api.imgbb.com) in *Config → imgbb_api_key*.",
+        "height": 150,
+        "width": 1380,
+        "color": 6
+      },
+      "id": "082be2a0-d9f0-4560-bca3-0a6676b87602",
+      "name": "Note Image Studio",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4688,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const fmt = String($('Config').first().json.format || 'carousel').toLowerCase();\nconst cr = $('Creative Agent').first().json.output;\nconst style = cr.visual_style || '';\nconst ratio = fmt === 'reel' ? '9:16' : '4:5';\nconst height = fmt === 'reel' ? 1920 : 1350;\nconst mk = (name, prompt, headline) => ({\n  name, aspect: ratio, width: 1080, height,\n  image_prompt: `${prompt}. ` + (headline ? `Include this exact headline text, bold and clearly legible, spelled exactly: \"${headline}\". ` : '') +\n    `Visual style: ${style}. Polished Instagram ${fmt === 'reel' ? 'reel cover' : 'post'} graphic, aspect ratio ${ratio}, no watermark, no logos.`\n});\nconst items = [mk('cover', cr.cover.image_prompt, cr.cover.headline)];\nif (fmt === 'carousel') (cr.slides || []).slice(0, 6).forEach((s, i) => items.push(mk('slide_' + (i + 1), s.image_prompt, s.headline)));\nreturn items.map(j => ({ json: j }));"
+      },
+      "id": "a26478d9-f926-41d2-aefd-e5f9fcb143ce",
+      "name": "Build Image Prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4800,
+        1360
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://generativelanguage.googleapis.com/v1beta/models/' + $('Config').first().json.image_model + ':generateContent' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contents: [{ parts: [{ text: $json.image_prompt }] }], generationConfig: { responseModalities: [\"IMAGE\"], imageConfig: { aspectRatio: $json.aspect } } }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "id": "39b9e3b3-0097-43df-aba6-f0f4e1c80cd8",
+      "name": "Generate Image (Gemini)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        5024,
+        1360
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 4000,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "b8n8SDngiK2O7jtj",
+          "name": "phazeai gemini api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const posts = $('Build Image Prompts').all();\nconst out = [];\nconst items = $input.all();\nfor (let i = 0; i < items.length; i++) {\n  const res = items[i].json;\n  const parts = (res.candidates && res.candidates[0] && res.candidates[0].content && res.candidates[0].content.parts) || [];\n  const img = parts.find((p) => p.inlineData || p.inline_data);\n  if (!img) throw new Error('No image returned for ' + posts[i].json.name + ': ' + JSON.stringify(res).slice(0, 400));\n  const data = img.inlineData || img.inline_data;\n  out.push({\n    json: posts[i].json,\n    binary: { data: await this.helpers.prepareBinaryData(Buffer.from(data.data, 'base64'), posts[i].json.name + '.png', data.mimeType || data.mime_type || 'image/png') },\n    pairedItem: { item: i },\n  });\n}\nreturn out;"
+      },
+      "id": "3615cfa8-9a44-453b-b8db-b72be8c4999a",
+      "name": "Image to File",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5248,
+        1360
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "width": "={{ $json.width }}",
+        "height": "={{ $json.height }}",
+        "resizeOption": "ignoreAspectRatio",
+        "options": {
+          "fileName": "={{ $json.name }}.jpg",
+          "format": "jpeg",
+          "quality": 88
+        }
+      },
+      "id": "9cae39eb-7546-439c-9a0f-78d7f08a10bf",
+      "name": "Make Instagram JPEG",
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        5472,
+        1360
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.imgbb.com/1/upload",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "={{ $('Config').first().json.imgbb_api_key }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "image",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          },
+          "timeout": 60000
+        }
+      },
+      "id": "6a50b809-6ae4-494a-9e52-9898299f71fa",
+      "name": "Upload Image (imgbb)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        5696,
+        1360
+      ],
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "jsCode": "const urls = $input.all().map(i => (i.json.data && (i.json.data.url || i.json.data.display_url)) || '').filter(Boolean);\nif (!urls.length) throw new Error('imgbb returned no URLs - check imgbb_api_key in Config');\nreturn [{ json: { urls, cover_url: urls[0], count: urls.length } }];"
+      },
+      "id": "762488fc-a3ca-4c6e-9307-aa03d6728d18",
+      "name": "Collect Image URLs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5920,
+        1360
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "1464300930",
+        "file": "={{ $('Collect Image URLs').first().json.cover_url }}",
+        "additionalFields": {
+          "caption": "=🖼 Cover — {{ $('Collect Image URLs').first().json.count }} image(s) generated & hosted"
+        }
+      },
+      "id": "fa4ab78a-102e-463f-a833-bcb1e75972b9",
+      "name": "Telegram: Send Cover Image",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        6368,
+        1360
+      ],
+      "webhookId": "3d707aa3-e6fd-489c-b784-521677cd3534",
+      "credentials": {
+        "telegramApi": {
+          "id": "Jx8AgPVooomTacHF",
+          "name": "Harshal telegram api"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {
+          "maxOutputTokens": 8192
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2288,
+        1568
+      ],
+      "id": "fc176bb0-8e86-43f3-99d5-a3764491866d",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "b8n8SDngiK2O7jtj",
+          "name": "phazeai gemini api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const urls = $('Instagram Settings').first().json.carousel_image_urls || [];\nreturn urls.slice(0, 10).map((u, i) => ({ json: { image_url: u, n: i + 1 } }));"
+      },
+      "id": "bb5cb533-0752-463f-9857-48c2015cf88c",
+      "name": "Split Carousel Images",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7488,
+        1072
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backend.composio.dev/api/v3/tools/execute/INSTAGRAM_CREATE_MEDIA_CONTAINER",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ connected_account_id: $('Instagram Settings').first().json.composio_instagram_account_id, entity_id: $('Instagram Settings').first().json.composio_entity_id, arguments: { ig_user_id: String(($('Get IG Account (Composio)').first().json.data || {}).id || ''), content_type: 'carousel_item', is_carousel_item: true, image_url: $json.image_url } }) }}",
+        "options": {
+          "timeout": 90000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1500
+            }
+          }
+        }
+      },
+      "id": "6a056af2-d05c-41ff-ba70-0730cbfd57a4",
+      "name": "Create Carousel Child (Composio)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        7712,
+        1072
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JhnYRu7tX00Km4uC",
+          "name": "harshal instagram composeio"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "jsCode": "const ids = $input.all().map(i => String((i.json.data && i.json.data.id) || '')).filter(Boolean);\nif (ids.length < 2) throw new Error('Carousel needs at least 2 child containers, got ' + ids.length + ': ' + JSON.stringify($input.all().map(i => i.json)).slice(0, 400));\nreturn [{ json: { children: ids } }];"
+      },
+      "id": "3c4d93bd-6181-44e4-97d0-8866ff15100a",
+      "name": "Collect Child IDs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7936,
+        1072
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backend.composio.dev/api/v3/tools/execute/INSTAGRAM_CREATE_CAROUSEL_CONTAINER",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ connected_account_id: $('Instagram Settings').first().json.composio_instagram_account_id, entity_id: $('Instagram Settings').first().json.composio_entity_id, arguments: { ig_user_id: String(($('Get IG Account (Composio)').first().json.data || {}).id || ''), children: $json.children, caption: $('Instagram Settings').first().json.caption } }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "6f31b31e-f106-4a57-98e7-0db9dc5b7ad7",
+      "name": "Create Carousel (Composio)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        8160,
+        1072
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JhnYRu7tX00Km4uC",
+          "name": "harshal instagram composeio"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backend.composio.dev/api/v3/tools/execute/INSTAGRAM_CREATE_MEDIA_CONTAINER",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ connected_account_id: $('Instagram Settings').first().json.composio_instagram_account_id, entity_id: $('Instagram Settings').first().json.composio_entity_id, arguments: { ig_user_id: String(($('Get IG Account (Composio)').first().json.data || {}).id || ''), content_type: 'reel', media_type: 'REELS', video_url: $('Instagram Settings').first().json.video_url, cover_url: $('Instagram Settings').first().json.cover_url, caption: $('Instagram Settings').first().json.caption } }) }}",
+        "options": {
+          "timeout": 180000
+        }
+      },
+      "id": "66f26cb4-4e2c-4af5-b996-f8a0f49ea769",
+      "name": "Create Reel (Composio)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        8160,
+        1264
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JhnYRu7tX00Km4uC",
+          "name": "harshal instagram composeio"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backend.composio.dev/api/v3/tools/execute/INSTAGRAM_CREATE_MEDIA_CONTAINER",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ connected_account_id: $('Instagram Settings').first().json.composio_instagram_account_id, entity_id: $('Instagram Settings').first().json.composio_entity_id, arguments: { ig_user_id: String(($('Get IG Account (Composio)').first().json.data || {}).id || ''), content_type: 'photo', image_url: $('Instagram Settings').first().json.image_url, caption: $('Instagram Settings').first().json.caption } }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "302b8fb7-aef5-463e-be08-6e7bb0b7cf25",
+      "name": "Create Image Post (Composio)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        8160,
+        1456
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JhnYRu7tX00Km4uC",
+          "name": "harshal instagram composeio"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 20,
+        "unit": "seconds"
+      },
+      "id": "e5a05f1b-e507-4d28-bcb4-6209c49c2c51",
+      "name": "Wait for Processing",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        8384,
+        1264
+      ],
+      "webhookId": "6d01af76-86e9-465d-b4c4-6bb6b3e1ba59"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backend.composio.dev/api/v3/tools/execute/INSTAGRAM_GET_POST_STATUS",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ connected_account_id: $('Instagram Settings').first().json.composio_instagram_account_id, entity_id: $('Instagram Settings').first().json.composio_entity_id, arguments: { creation_id: String($('Save Creation ID').first().json.creation_id) } }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "e917382a-5d80-4b06-94e8-4281af25f38b",
+      "name": "Check Container Status (Composio)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        8608,
+        1264
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JhnYRu7tX00Km4uC",
+          "name": "harshal instagram composeio"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f1ccee86-d8de-4a4e-a94a-7eae78bc02d1",
+                    "leftValue": "={{ (($json.data||{}).status_code || (($json.data||{}).response_data||{}).status_code || '').toString().toUpperCase() }}",
+                    "rightValue": "FINISHED",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renamedOutput": "ready"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "589e8f80-510e-4854-8212-ce2fa125f212",
+                    "leftValue": "={{ (($json.data||{}).status_code || (($json.data||{}).response_data||{}).status_code || '').toString().toUpperCase() }}",
+                    "rightValue": "ERROR",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renamedOutput": "failed"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "still processing"
+        }
+      },
+      "id": "a827cd70-3e23-473a-9960-9d6005381196",
+      "name": "Container Ready?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        8832,
+        1264
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "c35f3c91-6a43-4301-9883-a5ad5fbe38cc",
+      "name": "Stop: container failed",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        9056,
+        1456
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backend.composio.dev/api/v3/tools/execute/INSTAGRAM_CREATE_POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ connected_account_id: $('Instagram Settings').first().json.composio_instagram_account_id, entity_id: $('Instagram Settings').first().json.composio_entity_id, arguments: { ig_user_id: String(($('Get IG Account (Composio)').first().json.data || {}).id || ''), creation_id: String($('Save Creation ID').first().json.creation_id) } }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "cdf2d1a3-82a9-45fc-bb36-58933d818aca",
+      "name": "Publish Instagram Post (Composio)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        9056,
+        1264
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JhnYRu7tX00Km4uC",
+          "name": "harshal instagram composeio"
+        }
+      },
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0a0a7419-a602-4f4f-900b-84f0f2bce1d2",
+              "name": "creation_id",
+              "type": "string",
+              "value": "={{ String(($json.data && $json.data.id) || '') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a2402bae-b093-4acb-b084-61624bb2f58c",
+      "name": "Save Creation ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        8272,
+        1264
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "1464300930",
+        "text": "={{ ('🎬 REEL SCRIPT\\n\\n🧠 Topic: ' + $('Strategist Agent').first().json.output.chosen_topic + '\\n🎣 Hook: ' + $('Strategist Agent').first().json.output.hook + '\\n\\n' + $('Strategist Agent').first().json.output.script_scenes.map((x, i) => '▶️ Scene ' + (x.scene || i + 1) + '\\n🎥 Visual: ' + x.visual + '\\n🎙 Voiceover: ' + x.voiceover).join('\\n\\n') + '\\n\\n📣 CTA: ' + $('Strategist Agent').first().json.output.cta + '\\n\\n📋 Shot list:\\n' + ($('Creative Agent').first().json.output.reel_shot_list || []).map((x, i) => (i + 1) + '. ' + x).join('\\n')).slice(0, 3800).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "e330db5b-1beb-4901-9074-7a67e163c538",
+      "name": "Telegram: Send Reel Script",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        6480,
+        1560
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "Jx8AgPVooomTacHF",
+          "name": "Harshal telegram api"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "14c7fb8c-e4e9-4cce-bc52-0330b398bb6a",
+              "leftValue": "={{ String($('Config').first().json.format).toLowerCase().trim() }}",
+              "rightValue": "script",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "61302de5-5a21-4081-9491-bdaebb9c0632",
+      "name": "Script only?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3536,
+        1360
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "1464300930",
+        "text": "={{ ('🎬 REEL SCRIPT\\n\\n🧠 Topic: ' + $('Strategist Agent').first().json.output.chosen_topic + '\\n🎣 Hook: ' + $('Strategist Agent').first().json.output.hook + '\\n\\n' + $('Strategist Agent').first().json.output.script_scenes.map((x, i) => '▶️ Scene ' + (x.scene || i + 1) + '\\n🎥 Visual: ' + x.visual + '\\n🎙 Voiceover: ' + x.voiceover).join('\\n\\n') + '\\n\\n📣 CTA: ' + $('Strategist Agent').first().json.output.cta + '\\n\\n📝 Caption:\\n' + $('Strategist Agent').first().json.output.caption + '\\n\\n' + $('Strategist Agent').first().json.output.hashtags.join(' ')).slice(0, 3800).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "78b9733b-7994-4653-83dd-26c7a2b0fb86",
+      "name": "Telegram: Script Only",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3472,
+        1820
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "Jx8AgPVooomTacHF",
+          "name": "Harshal telegram api"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const o = ($input.first().json || {}).output;\nif (!o || !Array.isArray(o.script_scenes) || !o.script_scenes.length) {\n  const v = $('Validator Agent').first().json.output || {};\n  throw new Error('Strategist returned no script. Strategist output: ' + JSON.stringify($input.first().json).slice(0, 600) +\n    ' | Validator approved ideas: ' + ((v.approved_ideas || []).length) + ' | Validator summary: ' + (v.validation_summary || 'none'));\n}\nreturn $input.all();"
+      },
+      "id": "3854f0fc-d6df-4c74-834a-1694442f0d02",
+      "name": "Check Script",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3426,
+        1180
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Instagram Multi-Agent Content Factory",
+        "formDescription": "Choose a format and topic. 'script' only sends a reel script to Telegram. 'carousel' and 'image' also create images and can post to Instagram. Image Model is ignored for 'script'. Empty fields use the defaults.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Format",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "script"
+                  },
+                  {
+                    "option": "carousel"
+                  },
+                  {
+                    "option": "image"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Topic",
+              "placeholder": "e.g. ChatGPT Ads for business (leave empty to pick a trending topic)"
+            },
+            {
+              "fieldLabel": "Niche",
+              "placeholder": "Used only when Topic is empty. Default: AI automation and n8n for beginners"
+            },
+            {
+              "fieldLabel": "Audience",
+              "placeholder": "Default: Non-technical Indian learners, students and freelancers"
+            },
+            {
+              "fieldLabel": "Language",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Hinglish"
+                  },
+                  {
+                    "option": "English"
+                  },
+                  {
+                    "option": "Hindi"
+                  }
+                ]
+              },
+              "requiredField": false
+            },
+            {
+              "fieldLabel": "Brand Voice",
+              "placeholder": "Default: Friendly teacher, simple words, practical, no jargon"
+            },
+            {
+              "fieldLabel": "Country",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "IN"
+                  },
+                  {
+                    "option": "US"
+                  },
+                  {
+                    "option": "GB"
+                  },
+                  {
+                    "option": "AE"
+                  }
+                ]
+              },
+              "requiredField": false
+            },
+            {
+              "fieldLabel": "Instructions",
+              "placeholder": "Rules the Validator must follow (leave empty for default rules)",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "Image Model",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "gemini-2.5-flash-image"
+                  },
+                  {
+                    "option": "gemini-3.1-flash-image"
+                  }
+                ]
+              },
+              "requiredField": false
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false,
+          "buttonLabel": "Create content",
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "Submitted! The agents are working. Check Telegram in a few minutes."
+            }
+          }
+        }
+      },
+      "id": "c739a356-de9d-4b21-9b19-72bc1f8cb559",
+      "name": "Content Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        1696,
+        1264
+      ],
+      "webhookId": "e093de4c-b2ff-441f-b606-fbaa7857f579"
+    },
+    {
+      "parameters": {
+        "jsCode": "const f = $input.first().json;\nconst v = (k) => String(f[k] || '').trim();\nreturn [{ json: { body: {\n  format: v('Format'), topic: v('Topic'), niche: v('Niche'), audience: v('Audience'),\n  language: v('Language'), brand_voice: v('Brand Voice'), geo: v('Country'),\n  instructions: v('Instructions'), image_model: v('Image Model')\n} } }];"
+      },
+      "id": "bbb5f94b-c90b-4c9b-953f-ef8dfb805034",
+      "name": "Map Form Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        1264
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook (POST /ig-content-factory)": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool: Google Trends RSS": {
+      "ai_tool": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser (Research)": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Agent": {
+      "main": [
+        [
+          {
+            "node": "Validator Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini (Strategist)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Strategist Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser (Strategist)": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Strategist Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Strategist Agent": {
+      "main": [
+        [
+          {
+            "node": "Check Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini (Creative)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Creative Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser (Creative)": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Creative Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Creative Agent": {
+      "main": [
+        [
+          {
+            "node": "Publisher QA Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini (Publisher QA)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Publisher QA Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser (Publisher QA)": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Publisher QA Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publisher QA Agent": {
+      "main": [
+        [
+          {
+            "node": "Final Package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Package": {
+      "main": [
+        [
+          {
+            "node": "Approved by QA?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved by QA?": {
+      "main": [
+        [
+          {
+            "node": "Build Image Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sent back for revision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: Send Preview": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Send Cover Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Instagram Settings": {
+      "main": [
+        [
+          {
+            "node": "Auto-post enabled?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-post enabled?": {
+      "main": [
+        [
+          {
+            "node": "Get IG Account (Composio)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop: waiting for manual approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get IG Account (Composio)": {
+      "main": [
+        [
+          {
+            "node": "Post Format?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Format?": {
+      "main": [
+        [
+          {
+            "node": "Split Carousel Images",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Reel (Composio)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Image Post (Composio)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini (Validator)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Validator Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser (Validator)": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Validator Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool: Google Trends (Validator)": {
+      "ai_tool": [
+        [
+          {
+            "node": "Validator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validator Agent": {
+      "main": [
+        [
+          {
+            "node": "Strategist Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Image Prompts": {
+      "main": [
+        [
+          {
+            "node": "Generate Image (Gemini)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Image (Gemini)": {
+      "main": [
+        [
+          {
+            "node": "Image to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image to File": {
+      "main": [
+        [
+          {
+            "node": "Make Instagram JPEG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Make Instagram JPEG": {
+      "main": [
+        [
+          {
+            "node": "Upload Image (imgbb)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Image (imgbb)": {
+      "main": [
+        [
+          {
+            "node": "Collect Image URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Image URLs": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Send Preview",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: Send Cover Image": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Send Reel Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Carousel Images": {
+      "main": [
+        [
+          {
+            "node": "Create Carousel Child (Composio)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Carousel Child (Composio)": {
+      "main": [
+        [
+          {
+            "node": "Collect Child IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Child IDs": {
+      "main": [
+        [
+          {
+            "node": "Create Carousel (Composio)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Carousel (Composio)": {
+      "main": [
+        [
+          {
+            "node": "Save Creation ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Reel (Composio)": {
+      "main": [
+        [
+          {
+            "node": "Save Creation ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Image Post (Composio)": {
+      "main": [
+        [
+          {
+            "node": "Save Creation ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Processing": {
+      "main": [
+        [
+          {
+            "node": "Check Container Status (Composio)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Container Status (Composio)": {
+      "main": [
+        [
+          {
+            "node": "Container Ready?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Container Ready?": {
+      "main": [
+        [
+          {
+            "node": "Publish Instagram Post (Composio)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop: container failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait for Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Creation ID": {
+      "main": [
+        [
+          {
+            "node": "Wait for Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: Send Reel Script": {
+      "main": [
+        [
+          {
+            "node": "Instagram Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Script only?": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Script Only",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Creative Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Script": {
+      "main": [
+        [
+          {
+            "node": "Script only?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Form": {
+      "main": [
+        [
+          {
+            "node": "Map Form Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Form Fields": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3ca25ce30efb575044e5e6c7ac84101464f7a462b64d90f313a9619b6bb34a6e"
+  }
+}
