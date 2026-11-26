@@ -44,7 +44,7 @@ Config → Research → Validator → Strategist ──► (script) Telegram, en
 ## Repository structure
 
 ```
-├── dashboard.html                               # Web UI that calls the webhook
+├── index.html                               # Web UI that calls the webhook
 ├── workflows/
 │   └── instagram-multi-agent-content-system.json  # n8n workflow
 └── README.md
@@ -124,7 +124,7 @@ Activate (publish) the workflow, then use any of these.
 
 ### Dashboard
 
-1. Open `dashboard.html` in a browser.
+1. Open `index.html` in a browser.
 2. Under **Connection settings**, enter your n8n address.
 3. Choose a format, fill in the fields and send.
 
