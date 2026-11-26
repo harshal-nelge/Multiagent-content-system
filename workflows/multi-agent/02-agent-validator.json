@@ -1,0 +1,178 @@
+{
+  "name": "Agent 2 - Validator",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## ✅ AGENT 2 — VALIDATOR\nChecks every idea against our rules and keeps the best (max 5).\n**In:** config, research  →  **Out:** + validation",
+        "width": 640,
+        "height": 180,
+        "color": 3
+      },
+      "id": "3fa27d27-cf3a-4a6b-a165-d6cf560b0c86",
+      "name": "Note 1414",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=OUR INSTRUCTIONS (must all be satisfied):\n{{ $('Receive Input').first().json.config.instructions }}\n\n{{ $('Receive Input').first().json.config.topic ? 'USER TOPIC: ' + $('Receive Input').first().json.config.topic : 'Niche: ' + $('Receive Input').first().json.config.niche }}\nAudience: {{ $('Receive Input').first().json.config.audience }}\nBrand voice: {{ $('Receive Input').first().json.config.brand_voice }}\nCountry: {{ $('Receive Input').first().json.config.geo }}\n\nTrending ideas from the Research Agent:\n{{ JSON.stringify($('Receive Input').first().json.research.ideas) }}\n\nValidate every idea. Use the trends tool to verify the claim that it is trending.{{ $('Receive Input').first().json.config.topic ? '\\n\\nA user topic is given: wherever the instructions say niche, read it as the USER TOPIC. Do NOT reject ideas for not being trending. REJECT any idea that adds a tool, product or subject the user topic does not mention.' : '' }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the VALIDATOR AGENT, a strict editor. For each idea check: (1) relevant to the niche and useful to the audience, (2) obeys every line of OUR INSTRUCTIONS, (3) the 'trending' claim is real - verify with the trends tool, do not trust blindly, (4) safe, factual, not misleading, (5) can become an engaging Instagram post. Approve only ideas that pass all checks and give each a fit_score (1-10) and a one-line reason. Reject the rest with the exact reason. Return approved_ideas sorted best first (at most 5). If fewer than 2 pass, keep the 2 closest and say so in validation_summary. Return only the structured output. TOPIC RULE: when a USER TOPIC is given, it overrides the niche. Stay strictly on that topic exactly as written. Never add n8n, automation, or any other tool, product or angle that the user topic does not mention."
+        }
+      },
+      "id": "e03869da-cfaf-4748-b1fc-366c3d71944c",
+      "name": "Validator Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.6-flash",
+        "options": {
+          "maxOutputTokens": 8192,
+          "temperature": 0.2
+        }
+      },
+      "id": "8ff4fc90-a7b5-4c87-b674-7443c32af068",
+      "name": "Gemini (Validator)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        180,
+        520
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "b8n8SDngiK2O7jtj",
+          "name": "phazeai gemini api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"approved_ideas\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"topic\": {\n            \"type\": \"string\"\n          },\n          \"angle\": {\n            \"type\": \"string\"\n          },\n          \"why_trending\": {\n            \"type\": \"string\"\n          },\n          \"virality_score\": {\n            \"type\": \"number\"\n          },\n          \"fit_score\": {\n            \"type\": \"number\",\n            \"description\": \"1-10 fit with our instructions\"\n          },\n          \"reason\": {\n            \"type\": \"string\"\n          }\n        },\n        \"required\": [\n          \"topic\",\n          \"angle\",\n          \"fit_score\",\n          \"reason\"\n        ]\n      }\n    },\n    \"rejected_ideas\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"topic\": {\n            \"type\": \"string\"\n          },\n          \"reason\": {\n            \"type\": \"string\"\n          }\n        }\n      }\n    },\n    \"validation_summary\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"approved_ideas\",\n    \"rejected_ideas\",\n    \"validation_summary\"\n  ]\n}"
+      },
+      "id": "2caa5ae6-410f-4689-bfa2-8cf828aa7b51",
+      "name": "Parser (Validator)",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        350,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Fetches today's trending searches (RSS/XML) for the configured country. Use it to verify that an idea is genuinely trending.",
+        "url": "=https://trends.google.com/trending/rss?geo={{ $('Receive Input').first().json.config.geo }}"
+      },
+      "id": "51163a42-92d9-4120-ba13-e65a202def43",
+      "name": "Tool: Google Trends (Validator)",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "be2eda75-bcc0-42b4-af8c-d08cc35b2c9b",
+      "name": "Receive Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        40,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { ...$('Receive Input').first().json, validation: $('Validator Agent').first().json.output } }];"
+      },
+      "id": "e14b8cf1-1031-45c4-8da9-1270823ebfb5",
+      "name": "Return Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Gemini (Validator)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Validator Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser (Validator)": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Validator Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool: Google Trends (Validator)": {
+      "ai_tool": [
+        [
+          {
+            "node": "Validator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive Input": {
+      "main": [
+        [
+          {
+            "node": "Validator Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validator Agent": {
+      "main": [
+        [
+          {
+            "node": "Return Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

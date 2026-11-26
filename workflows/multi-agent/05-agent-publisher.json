@@ -1,0 +1,1130 @@
+{
+  "name": "Agent 5 - Publisher",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 📤 AGENT 5 — PUBLISHER / QA\nQuality check → Telegram preview and script → Instagram publishing via Composio (only when **auto_post = true** in *Instagram Settings*).\n**In:** config, strategy, creative, images",
+        "width": 640,
+        "height": 180,
+        "color": 2
+      },
+      "id": "77a1586c-e307-412f-80a8-1383d97b1e7c",
+      "name": "Note e3b3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -420
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Hook: {{ $('Receive Input').first().json.strategy.hook }}\nCaption: {{ $('Receive Input').first().json.strategy.caption }}\nHashtags: {{ $('Receive Input').first().json.strategy.hashtags.join(' ') }}\nCTA: {{ $('Receive Input').first().json.strategy.cta }}\nSlides: {{ JSON.stringify($('Receive Input').first().json.creative.slides) }}\nLanguage: {{ $('Receive Input').first().json.config.language }}\n\nRun QA and produce the final publish package.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the PUBLISHER/QA AGENT. Check: caption <= 2200 chars, hashtags <= 30 and each starts with '#', no misleading/false claims, no banned or spammy phrases, hook is strong, tone matches brand, CTA present. Fix problems yourself in final_caption/final_hashtags. Set approved=true only if quality_score >= 7 after fixes. Suggest best_post_time (IST) for Indian audience. Write a 2-line summary_for_human. Return only the structured output."
+        }
+      },
+      "id": "1ff8bc22-3ad5-4d6f-9c00-4ef0b4fa86d9",
+      "name": "Publisher QA Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        300,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8d232797-50e9-4660-a7ca-223a17f5a060",
+              "name": "status",
+              "type": "string",
+              "value": "={{ $json.output.approved ? 'READY_FOR_APPROVAL' : 'NEEDS_REVISION' }}"
+            },
+            {
+              "id": "38b65f6b-542c-4c9e-b7ff-89cba07d84f7",
+              "name": "topic",
+              "type": "string",
+              "value": "={{ $('Receive Input').first().json.strategy.chosen_topic }}"
+            },
+            {
+              "id": "2546cab9-9fc5-45c4-8dc5-9a440c86913c",
+              "name": "hook",
+              "type": "string",
+              "value": "={{ $('Receive Input').first().json.strategy.hook }}"
+            },
+            {
+              "id": "0f9daf35-f732-44f1-9168-42d53a6ea933",
+              "name": "caption",
+              "type": "string",
+              "value": "={{ $json.output.final_caption + '\\n\\n' + $json.output.final_hashtags.join(' ') }}"
+            },
+            {
+              "id": "c1c29a3f-c551-4cea-8e0d-4caff2364a3f",
+              "name": "quality_score",
+              "type": "number",
+              "value": "={{ $json.output.quality_score }}"
+            },
+            {
+              "id": "12d6c4f4-1c2f-4624-8527-4a21033412b5",
+              "name": "best_post_time",
+              "type": "string",
+              "value": "={{ $json.output.best_post_time }}"
+            },
+            {
+              "id": "efc0f37c-5b94-4a51-b8e8-f22d6cf27df7",
+              "name": "summary",
+              "type": "string",
+              "value": "={{ $json.output.summary_for_human }}"
+            },
+            {
+              "id": "3c440624-fa76-437e-adc9-c5e2eecc56dc",
+              "name": "cover_prompt",
+              "type": "string",
+              "value": "={{ $('Receive Input').first().json.creative.cover.image_prompt }}"
+            },
+            {
+              "id": "a49ea491-cf26-41c1-94c1-3777b871158b",
+              "name": "slides",
+              "type": "array",
+              "value": "={{ $('Receive Input').first().json.creative.slides }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fc38c356-f8a5-4c0f-acbc-ea7c655eca32",
+      "name": "Final Package",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        652,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b48b099e-f188-4f83-a589-165b2af2da16",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "READY_FOR_APPROVAL",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "68a2232d-97bf-4844-aacc-bcc2cc6b385d",
+      "name": "Approved by QA?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        876,
+        396
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "5f84e448-3856-4a57-9699-61984058bdd8",
+      "name": "Sent back for revision",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        492
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "1464300930",
+        "text": "=📣 NEW POST READY (score {{ $('Final Package').first().json.quality_score }}/10)\n\n🧠 Topic: {{ $('Final Package').first().json.topic }}\n🎣 Hook: {{ $('Final Package').first().json.hook }}\n⏰ Best time: {{ $('Final Package').first().json.best_post_time }}\n\n📝 Caption:\n{{ $('Final Package').first().json.caption }}\n\n🖼 Cover prompt: {{ $('Final Package').first().json.cover_prompt }}\n\n{{ $('Final Package').first().json.summary }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "73af5b9b-984c-443b-9127-32ccc637dedc",
+      "name": "Telegram: Send Preview",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2444,
+        300
+      ],
+      "webhookId": "38e2b681-e102-469e-a78e-ed841f396dbd",
+      "credentials": {
+        "telegramApi": {
+          "id": "Jx8AgPVooomTacHF",
+          "name": "Harshal telegram api"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "1464300930",
+        "file": "={{ $('Receive Input').first().json.images.cover_url }}",
+        "additionalFields": {
+          "caption": "=🖼 Cover — {{ $('Receive Input').first().json.images.count }} image(s) generated & hosted"
+        }
+      },
+      "id": "fa4ab78a-102e-463f-a833-bcb1e75972b9",
+      "name": "Telegram: Send Cover Image",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2668,
+        300
+      ],
+      "webhookId": "3d707aa3-e6fd-489c-b784-521677cd3534",
+      "credentials": {
+        "telegramApi": {
+          "id": "Jx8AgPVooomTacHF",
+          "name": "Harshal telegram api"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "1464300930",
+        "text": "={{ ('🎬 REEL SCRIPT\\n\\n🧠 Topic: ' + $('Receive Input').first().json.strategy.chosen_topic + '\\n🎣 Hook: ' + $('Receive Input').first().json.strategy.hook + '\\n\\n' + $('Receive Input').first().json.strategy.script_scenes.map((x, i) => '▶️ Scene ' + (x.scene || i + 1) + '\\n🎥 Visual: ' + x.visual + '\\n🎙 Voiceover: ' + x.voiceover).join('\\n\\n') + '\\n\\n📣 CTA: ' + $('Receive Input').first().json.strategy.cta + '\\n\\n📋 Shot list:\\n' + ($('Receive Input').first().json.creative.reel_shot_list || []).map((x, i) => (i + 1) + '. ' + x).join('\\n')).slice(0, 3800).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "e330db5b-1beb-4901-9074-7a67e163c538",
+      "name": "Telegram: Send Reel Script",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2780,
+        500
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "Jx8AgPVooomTacHF",
+          "name": "Harshal telegram api"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8bcf1996-ca94-4b27-a726-1ae53608bc51",
+              "name": "composio_instagram_account_id",
+              "type": "string",
+              "value": "ca_Ns70iscGW4ni"
+            },
+            {
+              "id": "ea279764-e98f-44c6-869f-a767b38bc032",
+              "name": "composio_entity_id",
+              "type": "string",
+              "value": "pg-test-c5392bb0-0620-42a0-aec0-5fc7e67f28b4"
+            },
+            {
+              "id": "a392b1e6-2d19-4df6-86e1-b6ec8de8f64d",
+              "name": "auto_post",
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "id": "1843b764-4d60-4044-a14f-57f537483c5e",
+              "name": "post_format",
+              "type": "string",
+              "value": "={{ String($('Receive Input').first().json.config.format).toLowerCase() }}"
+            },
+            {
+              "id": "443c6952-e832-4d00-ac4c-01caf353390e",
+              "name": "caption",
+              "type": "string",
+              "value": "={{ $('Final Package').first().json.caption }}"
+            },
+            {
+              "id": "821299fc-e28f-4841-a5d5-9541247f2844",
+              "name": "video_url",
+              "type": "string",
+              "value": "PASTE_PUBLIC_MP4_URL_FOR_REELS (only needed when format=reel)"
+            },
+            {
+              "id": "75febad9-d80b-4002-a13a-5e29bfa3ee50",
+              "name": "cover_url",
+              "type": "string",
+              "value": "={{ $('Receive Input').first().json.images.cover_url }}"
+            },
+            {
+              "id": "2e3e1580-f275-48a9-8360-9c516e3c89b1",
+              "name": "carousel_image_urls",
+              "type": "array",
+              "value": "={{ $('Receive Input').first().json.images.urls }}"
+            },
+            {
+              "id": "77be105b-5bee-4e2b-8cd3-88271bece0cc",
+              "name": "image_url",
+              "type": "string",
+              "value": "={{ $('Receive Input').first().json.images.urls[0] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "84d90c7e-6ccb-41d7-813b-9f2e4ad39a5c",
+      "name": "Instagram Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2892,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "154045a7-fdc2-435c-8022-6bbd3275e516",
+              "leftValue": "={{ $json.auto_post }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "59c003fb-c22b-473b-a87c-f6e5a56e7af3",
+      "name": "Auto-post enabled?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3116,
+        300
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "1d78f560-bc88-497e-83d1-f378026e041b",
+      "name": "Stop: waiting for manual approval",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3340,
+        396
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backend.composio.dev/api/v3/tools/execute/INSTAGRAM_GET_USER_INFO",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ connected_account_id: $('Instagram Settings').first().json.composio_instagram_account_id, entity_id: $('Instagram Settings').first().json.composio_entity_id, arguments: {} }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "5650d3ef-de99-4850-ae03-c514642fa367",
+      "name": "Get IG Account (Composio)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3340,
+        204
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JhnYRu7tX00Km4uC",
+          "name": "harshal instagram composeio"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2ecd587d-2ac8-4d6d-9658-1d4ceb6ffa61",
+                    "leftValue": "={{ $('Instagram Settings').first().json.post_format }}",
+                    "rightValue": "carousel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "be970bfa-c2f4-4bcf-8e89-57494497befd",
+                    "leftValue": "={{ $('Instagram Settings').first().json.post_format }}",
+                    "rightValue": "reel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "575f6ce9-118f-4f20-99e0-e461554d4e93",
+                    "leftValue": "={{ $('Instagram Settings').first().json.post_format }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3b2b4d10-139b-4786-a53d-42b628222776",
+      "name": "Post Format?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        3564,
+        188
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const urls = $('Instagram Settings').first().json.carousel_image_urls || [];\nreturn urls.slice(0, 10).map((u, i) => ({ json: { image_url: u, n: i + 1 } }));"
+      },
+      "id": "bb5cb533-0752-463f-9857-48c2015cf88c",
+      "name": "Split Carousel Images",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3788,
+        12
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backend.composio.dev/api/v3/tools/execute/INSTAGRAM_CREATE_MEDIA_CONTAINER",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ connected_account_id: $('Instagram Settings').first().json.composio_instagram_account_id, entity_id: $('Instagram Settings').first().json.composio_entity_id, arguments: { ig_user_id: String(($('Get IG Account (Composio)').first().json.data || {}).id || ''), content_type: 'carousel_item', is_carousel_item: true, image_url: $json.image_url } }) }}",
+        "options": {
+          "timeout": 90000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1500
+            }
+          }
+        }
+      },
+      "id": "6a056af2-d05c-41ff-ba70-0730cbfd57a4",
+      "name": "Create Carousel Child (Composio)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4012,
+        12
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JhnYRu7tX00Km4uC",
+          "name": "harshal instagram composeio"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "jsCode": "const ids = $input.all().map(i => String((i.json.data && i.json.data.id) || '')).filter(Boolean);\nif (ids.length < 2) throw new Error('Carousel needs at least 2 child containers, got ' + ids.length + ': ' + JSON.stringify($input.all().map(i => i.json)).slice(0, 400));\nreturn [{ json: { children: ids } }];"
+      },
+      "id": "3c4d93bd-6181-44e4-97d0-8866ff15100a",
+      "name": "Collect Child IDs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4236,
+        12
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backend.composio.dev/api/v3/tools/execute/INSTAGRAM_CREATE_CAROUSEL_CONTAINER",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ connected_account_id: $('Instagram Settings').first().json.composio_instagram_account_id, entity_id: $('Instagram Settings').first().json.composio_entity_id, arguments: { ig_user_id: String(($('Get IG Account (Composio)').first().json.data || {}).id || ''), children: $json.children, caption: $('Instagram Settings').first().json.caption } }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "6f31b31e-f106-4a57-98e7-0db9dc5b7ad7",
+      "name": "Create Carousel (Composio)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4460,
+        12
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JhnYRu7tX00Km4uC",
+          "name": "harshal instagram composeio"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backend.composio.dev/api/v3/tools/execute/INSTAGRAM_CREATE_MEDIA_CONTAINER",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ connected_account_id: $('Instagram Settings').first().json.composio_instagram_account_id, entity_id: $('Instagram Settings').first().json.composio_entity_id, arguments: { ig_user_id: String(($('Get IG Account (Composio)').first().json.data || {}).id || ''), content_type: 'reel', media_type: 'REELS', video_url: $('Instagram Settings').first().json.video_url, cover_url: $('Instagram Settings').first().json.cover_url, caption: $('Instagram Settings').first().json.caption } }) }}",
+        "options": {
+          "timeout": 180000
+        }
+      },
+      "id": "66f26cb4-4e2c-4af5-b996-f8a0f49ea769",
+      "name": "Create Reel (Composio)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4460,
+        204
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JhnYRu7tX00Km4uC",
+          "name": "harshal instagram composeio"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backend.composio.dev/api/v3/tools/execute/INSTAGRAM_CREATE_MEDIA_CONTAINER",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ connected_account_id: $('Instagram Settings').first().json.composio_instagram_account_id, entity_id: $('Instagram Settings').first().json.composio_entity_id, arguments: { ig_user_id: String(($('Get IG Account (Composio)').first().json.data || {}).id || ''), content_type: 'photo', image_url: $('Instagram Settings').first().json.image_url, caption: $('Instagram Settings').first().json.caption } }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "302b8fb7-aef5-463e-be08-6e7bb0b7cf25",
+      "name": "Create Image Post (Composio)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4460,
+        396
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JhnYRu7tX00Km4uC",
+          "name": "harshal instagram composeio"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0a0a7419-a602-4f4f-900b-84f0f2bce1d2",
+              "name": "creation_id",
+              "type": "string",
+              "value": "={{ String(($json.data && $json.data.id) || '') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a2402bae-b093-4acb-b084-61624bb2f58c",
+      "name": "Save Creation ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4572,
+        204
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 20,
+        "unit": "seconds"
+      },
+      "id": "e5a05f1b-e507-4d28-bcb4-6209c49c2c51",
+      "name": "Wait for Processing",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4684,
+        204
+      ],
+      "webhookId": "6d01af76-86e9-465d-b4c4-6bb6b3e1ba59"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backend.composio.dev/api/v3/tools/execute/INSTAGRAM_GET_POST_STATUS",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ connected_account_id: $('Instagram Settings').first().json.composio_instagram_account_id, entity_id: $('Instagram Settings').first().json.composio_entity_id, arguments: { creation_id: String($('Save Creation ID').first().json.creation_id) } }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "e917382a-5d80-4b06-94e8-4281af25f38b",
+      "name": "Check Container Status (Composio)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4908,
+        204
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JhnYRu7tX00Km4uC",
+          "name": "harshal instagram composeio"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f1ccee86-d8de-4a4e-a94a-7eae78bc02d1",
+                    "leftValue": "={{ (($json.data||{}).status_code || (($json.data||{}).response_data||{}).status_code || '').toString().toUpperCase() }}",
+                    "rightValue": "FINISHED",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renamedOutput": "ready"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "589e8f80-510e-4854-8212-ce2fa125f212",
+                    "leftValue": "={{ (($json.data||{}).status_code || (($json.data||{}).response_data||{}).status_code || '').toString().toUpperCase() }}",
+                    "rightValue": "ERROR",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renamedOutput": "failed"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "still processing"
+        }
+      },
+      "id": "a827cd70-3e23-473a-9960-9d6005381196",
+      "name": "Container Ready?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        5132,
+        204
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "c35f3c91-6a43-4301-9883-a5ad5fbe38cc",
+      "name": "Stop: container failed",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        5356,
+        396
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backend.composio.dev/api/v3/tools/execute/INSTAGRAM_CREATE_POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ connected_account_id: $('Instagram Settings').first().json.composio_instagram_account_id, entity_id: $('Instagram Settings').first().json.composio_entity_id, arguments: { ig_user_id: String(($('Get IG Account (Composio)').first().json.data || {}).id || ''), creation_id: String($('Save Creation ID').first().json.creation_id) } }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "cdf2d1a3-82a9-45fc-bb36-58933d818aca",
+      "name": "Publish Instagram Post (Composio)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        5356,
+        204
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JhnYRu7tX00Km4uC",
+          "name": "harshal instagram composeio"
+        }
+      },
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.6-flash",
+        "options": {
+          "maxOutputTokens": 8192,
+          "temperature": 0.7
+        }
+      },
+      "id": "8fcf4815-382c-4cf4-babc-9698c0f48dd9",
+      "name": "Gemini (Publisher QA)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        308,
+        524
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "b8n8SDngiK2O7jtj",
+          "name": "phazeai gemini api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"approved\": {\n      \"type\": \"boolean\"\n    },\n    \"quality_score\": {\n      \"type\": \"number\",\n      \"description\": \"1-10\"\n    },\n    \"issues_found\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"final_caption\": {\n      \"type\": \"string\"\n    },\n    \"final_hashtags\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"best_post_time\": {\n      \"type\": \"string\"\n    },\n    \"summary_for_human\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"approved\",\n    \"quality_score\",\n    \"final_caption\",\n    \"final_hashtags\",\n    \"summary_for_human\"\n  ]\n}"
+      },
+      "id": "e4523c68-3137-4a99-a73f-3a2f4edb270f",
+      "name": "Parser (Publisher QA)",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        436,
+        524
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "661e2624-5a93-4a67-a5aa-82952190e3ad",
+      "name": "Receive Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        40,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Gemini (Publisher QA)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Publisher QA Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser (Publisher QA)": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Publisher QA Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publisher QA Agent": {
+      "main": [
+        [
+          {
+            "node": "Final Package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Package": {
+      "main": [
+        [
+          {
+            "node": "Approved by QA?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved by QA?": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Send Preview",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sent back for revision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: Send Preview": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Send Cover Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Instagram Settings": {
+      "main": [
+        [
+          {
+            "node": "Auto-post enabled?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-post enabled?": {
+      "main": [
+        [
+          {
+            "node": "Get IG Account (Composio)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop: waiting for manual approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get IG Account (Composio)": {
+      "main": [
+        [
+          {
+            "node": "Post Format?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Format?": {
+      "main": [
+        [
+          {
+            "node": "Split Carousel Images",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Reel (Composio)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Image Post (Composio)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: Send Cover Image": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Send Reel Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Carousel Images": {
+      "main": [
+        [
+          {
+            "node": "Create Carousel Child (Composio)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Carousel Child (Composio)": {
+      "main": [
+        [
+          {
+            "node": "Collect Child IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Child IDs": {
+      "main": [
+        [
+          {
+            "node": "Create Carousel (Composio)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Carousel (Composio)": {
+      "main": [
+        [
+          {
+            "node": "Save Creation ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Reel (Composio)": {
+      "main": [
+        [
+          {
+            "node": "Save Creation ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Image Post (Composio)": {
+      "main": [
+        [
+          {
+            "node": "Save Creation ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Processing": {
+      "main": [
+        [
+          {
+            "node": "Check Container Status (Composio)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Container Status (Composio)": {
+      "main": [
+        [
+          {
+            "node": "Container Ready?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Container Ready?": {
+      "main": [
+        [
+          {
+            "node": "Publish Instagram Post (Composio)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop: container failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait for Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Creation ID": {
+      "main": [
+        [
+          {
+            "node": "Wait for Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: Send Reel Script": {
+      "main": [
+        [
+          {
+            "node": "Instagram Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive Input": {
+      "main": [
+        [
+          {
+            "node": "Publisher QA Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

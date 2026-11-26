@@ -1,0 +1,362 @@
+{
+  "name": "Agent 4 - Creative + Images",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 🎨 AGENT 4 — CREATIVE + IMAGE STUDIO\nPlans the visuals, creates the images with Gemini, converts to JPEG and hosts them on imgbb.\n**In:** config, strategy  →  **Out:** + creative, images",
+        "width": 640,
+        "height": 180,
+        "color": 6
+      },
+      "id": "96c9f26f-3b60-477c-a5d2-fe9a19cd6a2e",
+      "name": "Note d05b",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Content plan:\n{{ JSON.stringify($('Receive Input').first().json.strategy) }}\n\nBrand voice: {{ $('Receive Input').first().json.config.brand_voice }}\nFormat: {{ $('Receive Input').first().json.config.format }}\n\nCreate the visual assets plan.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the CREATIVE AGENT. Convert the content plan into: a cover (bold headline max 6 words + a detailed image prompt), 4-6 carousel slides (headline max 6 words, body max 25 words, plus a detailed image_prompt each), a reel shot list, one consistent visual_style (colors, fonts, mood) and accessible alt text. Image prompts are for a Gemini image model that renders TEXT well: describe composition, subject, colors, lighting and leave clean space for the headline; the headline itself is added automatically from the 'headline' field, so do not repeat it in image_prompt. Keep every slide visually consistent with visual_style. No copyrighted characters, no real people, no logos. Return only the structured output."
+        }
+      },
+      "id": "842b268b-c297-4df0-9788-c8078b0fee3a",
+      "name": "Creative Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        300,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const fmt = String($('Receive Input').first().json.config.format || 'carousel').toLowerCase();\nconst cr = $('Creative Agent').first().json.output;\nconst style = cr.visual_style || '';\nconst ratio = fmt === 'reel' ? '9:16' : '4:5';\nconst height = fmt === 'reel' ? 1920 : 1350;\nconst mk = (name, prompt, headline) => ({\n  name, aspect: ratio, width: 1080, height,\n  image_prompt: `${prompt}. ` + (headline ? `Include this exact headline text, bold and clearly legible, spelled exactly: \"${headline}\". ` : '') +\n    `Visual style: ${style}. Polished Instagram ${fmt === 'reel' ? 'reel cover' : 'post'} graphic, aspect ratio ${ratio}, no watermark, no logos.`\n});\nconst items = [mk('cover', cr.cover.image_prompt, cr.cover.headline)];\nif (fmt === 'carousel') (cr.slides || []).slice(0, 6).forEach((s, i) => items.push(mk('slide_' + (i + 1), s.image_prompt, s.headline)));\nreturn items.map(j => ({ json: j }));"
+      },
+      "id": "a26478d9-f926-41d2-aefd-e5f9fcb143ce",
+      "name": "Build Image Prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://generativelanguage.googleapis.com/v1beta/models/' + $('Receive Input').first().json.config.image_model + ':generateContent' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contents: [{ parts: [{ text: $json.image_prompt }] }], generationConfig: { responseModalities: [\"IMAGE\"], imageConfig: { aspectRatio: $json.aspect } } }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "id": "39b9e3b3-0097-43df-aba6-f0f4e1c80cd8",
+      "name": "Generate Image (Gemini)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        820,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 4000,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "b8n8SDngiK2O7jtj",
+          "name": "phazeai gemini api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const posts = $('Build Image Prompts').all();\nconst out = [];\nconst items = $input.all();\nfor (let i = 0; i < items.length; i++) {\n  const res = items[i].json;\n  const parts = (res.candidates && res.candidates[0] && res.candidates[0].content && res.candidates[0].content.parts) || [];\n  const img = parts.find((p) => p.inlineData || p.inline_data);\n  if (!img) throw new Error('No image returned for ' + posts[i].json.name + ': ' + JSON.stringify(res).slice(0, 400));\n  const data = img.inlineData || img.inline_data;\n  out.push({\n    json: posts[i].json,\n    binary: { data: await this.helpers.prepareBinaryData(Buffer.from(data.data, 'base64'), posts[i].json.name + '.png', data.mimeType || data.mime_type || 'image/png') },\n    pairedItem: { item: i },\n  });\n}\nreturn out;"
+      },
+      "id": "3615cfa8-9a44-453b-b8db-b72be8c4999a",
+      "name": "Image to File",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "width": "={{ $json.width }}",
+        "height": "={{ $json.height }}",
+        "resizeOption": "ignoreAspectRatio",
+        "options": {
+          "fileName": "={{ $json.name }}.jpg",
+          "format": "jpeg",
+          "quality": 88
+        }
+      },
+      "id": "9cae39eb-7546-439c-9a0f-78d7f08a10bf",
+      "name": "Make Instagram JPEG",
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        1260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.imgbb.com/1/upload",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "={{ $('Receive Input').first().json.config.imgbb_api_key }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "image",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          },
+          "timeout": 60000
+        }
+      },
+      "id": "6a50b809-6ae4-494a-9e52-9898299f71fa",
+      "name": "Upload Image (imgbb)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1480,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "jsCode": "const urls = $input.all().map(i => (i.json.data && (i.json.data.url || i.json.data.display_url)) || '').filter(Boolean);\nif (!urls.length) throw new Error('imgbb returned no URLs - check imgbb_api_key in Config');\nreturn [{ json: { urls, cover_url: urls[0], count: urls.length } }];"
+      },
+      "id": "762488fc-a3ca-4c6e-9307-aa03d6728d18",
+      "name": "Collect Image URLs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1700,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.6-flash",
+        "options": {
+          "maxOutputTokens": 8192,
+          "temperature": 0.7
+        }
+      },
+      "id": "2067ccb8-f544-4ece-a132-4ddcdb254f6d",
+      "name": "Gemini (Creative)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        180,
+        520
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "b8n8SDngiK2O7jtj",
+          "name": "phazeai gemini api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"cover\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"headline\": {\n          \"type\": \"string\"\n        },\n        \"image_prompt\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"slides\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"slide\": {\n            \"type\": \"number\"\n          },\n          \"headline\": {\n            \"type\": \"string\"\n          },\n          \"body\": {\n            \"type\": \"string\"\n          },\n          \"image_prompt\": {\n            \"type\": \"string\"\n          }\n        }\n      }\n    },\n    \"reel_shot_list\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"visual_style\": {\n      \"type\": \"string\"\n    },\n    \"alt_text\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"cover\",\n    \"slides\",\n    \"visual_style\",\n    \"alt_text\"\n  ]\n}"
+      },
+      "id": "3702080d-010d-4d03-bfa1-f46695d03c48",
+      "name": "Parser (Creative)",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        350,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "91eb7491-1908-4952-88d1-4031dfeae4f8",
+      "name": "Receive Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        40,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { ...$('Receive Input').first().json, creative: $('Creative Agent').first().json.output, images: $('Collect Image URLs').first().json } }];"
+      },
+      "id": "86546643-a945-4a62-870e-468c79f6544b",
+      "name": "Return Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Gemini (Creative)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Creative Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser (Creative)": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Creative Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Image Prompts": {
+      "main": [
+        [
+          {
+            "node": "Generate Image (Gemini)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Image (Gemini)": {
+      "main": [
+        [
+          {
+            "node": "Image to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image to File": {
+      "main": [
+        [
+          {
+            "node": "Make Instagram JPEG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Make Instagram JPEG": {
+      "main": [
+        [
+          {
+            "node": "Upload Image (imgbb)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Image (imgbb)": {
+      "main": [
+        [
+          {
+            "node": "Collect Image URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive Input": {
+      "main": [
+        [
+          {
+            "node": "Creative Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Creative Agent": {
+      "main": [
+        [
+          {
+            "node": "Build Image Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Image URLs": {
+      "main": [
+        [
+          {
+            "node": "Return Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

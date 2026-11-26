@@ -1,0 +1,179 @@
+{
+  "name": "Agent 1 - Research",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 🔎 AGENT 1 — RESEARCH\nSuggests 8 content ideas from Google trends, or 8 angles on your topic.\n**In:** config  →  **Out:** + research",
+        "width": 640,
+        "height": 180,
+        "color": 4
+      },
+      "id": "f8f0b31b-1920-4e76-bdb4-3bd883be6c53",
+      "name": "Note 201d",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.config.topic ? 'USER TOPIC: ' + $json.config.topic : 'Niche: ' + $json.config.niche }}\nAudience: {{ $json.config.audience }}\nCountry code: {{ $json.config.geo }}\n\n{{ $json.config.topic ? 'Produce 8 Instagram content ideas that are all different angles on the USER TOPIC only. Do not connect it to any other subject or tool.' : 'Use the Google Trends tool, then produce 8 Instagram content ideas for this niche.' }} Rank them by virality_score.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the RESEARCH AGENT in a 4-agent Instagram content team. Your job: discover trending topics and connect them to the niche. When no user topic is given, call the trends tool first. When no user topic is given, connect trending themes to the niche. Only suggest ideas that are useful, factual and safe. Be concise. Return only the structured output. TOPIC RULE: when a USER TOPIC is given, it overrides the niche. Stay strictly on that topic exactly as written. Never add n8n, automation, or any other tool, product or angle that the user topic does not mention."
+        }
+      },
+      "id": "bef62626-02a1-4ffd-9ceb-210fb9c227cd",
+      "name": "Research Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        300,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "toolDescription": "Fetches today's trending searches (RSS/XML) for the configured country. Use it to see what people are searching for right now.",
+        "url": "=https://trends.google.com/trending/rss?geo={{ $('Receive Input').first().json.config.geo }}"
+      },
+      "id": "017cae8a-53d0-41b5-9730-abbf1252b030",
+      "name": "Tool: Google Trends RSS",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        180,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"ideas\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"topic\": {\n            \"type\": \"string\"\n          },\n          \"angle\": {\n            \"type\": \"string\"\n          },\n          \"why_trending\": {\n            \"type\": \"string\"\n          },\n          \"virality_score\": {\n            \"type\": \"number\",\n            \"description\": \"1-10\"\n          }\n        },\n        \"required\": [\n          \"topic\",\n          \"angle\",\n          \"why_trending\",\n          \"virality_score\"\n        ]\n      }\n    }\n  },\n  \"required\": [\n    \"ideas\"\n  ]\n}"
+      },
+      "id": "e2ce895e-363c-459b-a4fc-822f37259ed7",
+      "name": "Parser (Research)",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        350,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {
+          "maxOutputTokens": 8192
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        520,
+        520
+      ],
+      "id": "fc176bb0-8e86-43f3-99d5-a3764491866d",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "b8n8SDngiK2O7jtj",
+          "name": "phazeai gemini api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "16de0700-a312-462f-8b44-aaeac6ea9f7d",
+      "name": "Receive Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        40,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { ...$('Receive Input').first().json, research: $('Research Agent').first().json.output } }];"
+      },
+      "id": "df1b61ab-adca-4de4-885e-acd413fec8eb",
+      "name": "Return Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Tool: Google Trends RSS": {
+      "ai_tool": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser (Research)": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive Input": {
+      "main": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Agent": {
+      "main": [
+        [
+          {
+            "node": "Return Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

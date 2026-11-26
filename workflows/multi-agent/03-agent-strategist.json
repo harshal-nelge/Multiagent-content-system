@@ -1,0 +1,179 @@
+{
+  "name": "Agent 3 - Strategist",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 🧠 AGENT 3 — STRATEGIST\nPicks one idea and writes hook, reel script, caption, hashtags and CTA.\n**In:** config, validation  →  **Out:** + strategy",
+        "width": 640,
+        "height": 180,
+        "color": 5
+      },
+      "id": "0bfa17f8-e297-45c1-acc4-2186e6bd3169",
+      "name": "Note d7d4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Receive Input').first().json.config.topic ? 'USER TOPIC: ' + $('Receive Input').first().json.config.topic + '\\n\\n' : '' }}VALIDATED ideas (already checked against our instructions, best first):\n{{ JSON.stringify($('Receive Input').first().json.validation.approved_ideas) }}\n\nBrand voice: {{ $('Receive Input').first().json.config.brand_voice }}\nLanguage: {{ $('Receive Input').first().json.config.language }}\nAudience: {{ $('Receive Input').first().json.config.audience }}\nFormat: {{ $('Receive Input').first().json.config.format }}\n\nPick the ONE best idea and write the full content plan.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the STRATEGIST AGENT. Choose the single idea with best audience fit + virality. Write: a scroll-stopping hook (max 12 words), a 5-7 scene script (30-45s) with visual + voiceover per scene, an engaging caption (max 1500 chars, first line = hook), 15-20 mixed-size hashtags (each starting with #), and one clear CTA that fits the topic (e.g. 'Save this for later'). Write in the requested language and voice. One idea only. Return only the structured output. TOPIC RULE: when a USER TOPIC is given, it overrides the niche. Stay strictly on that topic exactly as written. Never add n8n, automation, or any other tool, product or angle that the user topic does not mention. Do not invent product features, setup steps, prices or statistics; if you are unsure a detail is real, keep it general."
+        }
+      },
+      "id": "8d14c574-fcdd-4d6d-a19f-2bffcbaf5960",
+      "name": "Strategist Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        300,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const o = ($input.first().json || {}).output;\nif (!o || !Array.isArray(o.script_scenes) || !o.script_scenes.length) {\n  const v = $('Receive Input').first().json.validation || {};\n  throw new Error('Strategist returned no script. Strategist output: ' + JSON.stringify($input.first().json).slice(0, 600) +\n    ' | Validator approved ideas: ' + ((v.approved_ideas || []).length) + ' | Validator summary: ' + (v.validation_summary || 'none'));\n}\nreturn $input.all();"
+      },
+      "id": "3854f0fc-d6df-4c74-834a-1694442f0d02",
+      "name": "Check Script",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.6-flash",
+        "options": {
+          "maxOutputTokens": 8192,
+          "temperature": 0.7
+        }
+      },
+      "id": "a52e3540-431a-4822-b4b3-557c9057e411",
+      "name": "Gemini (Strategist)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        180,
+        520
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "b8n8SDngiK2O7jtj",
+          "name": "phazeai gemini api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"chosen_topic\": {\n      \"type\": \"string\"\n    },\n    \"why_chosen\": {\n      \"type\": \"string\"\n    },\n    \"hook\": {\n      \"type\": \"string\"\n    },\n    \"script_scenes\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"scene\": {\n            \"type\": \"number\"\n          },\n          \"visual\": {\n            \"type\": \"string\"\n          },\n          \"voiceover\": {\n            \"type\": \"string\"\n          }\n        }\n      }\n    },\n    \"caption\": {\n      \"type\": \"string\"\n    },\n    \"hashtags\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"cta\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"chosen_topic\",\n    \"hook\",\n    \"script_scenes\",\n    \"caption\",\n    \"hashtags\",\n    \"cta\"\n  ]\n}"
+      },
+      "id": "d493a87a-2303-4ae3-af74-02c791b40377",
+      "name": "Parser (Strategist)",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        350,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "d05e53f0-8b6c-497d-9810-ac274d554995",
+      "name": "Receive Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        40,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { ...$('Receive Input').first().json, strategy: $('Check Script').first().json.output } }];"
+      },
+      "id": "34efbd4d-71bf-4c0f-92bd-63c6e89cea16",
+      "name": "Return Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        820,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Gemini (Strategist)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Strategist Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser (Strategist)": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Strategist Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Strategist Agent": {
+      "main": [
+        [
+          {
+            "node": "Check Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive Input": {
+      "main": [
+        [
+          {
+            "node": "Strategist Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Script": {
+      "main": [
+        [
+          {
+            "node": "Return Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

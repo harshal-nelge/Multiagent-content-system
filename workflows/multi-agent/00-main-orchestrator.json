@@ -1,0 +1,580 @@
+{
+  "name": "Multi-Agent Content System - Orchestrator",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# 🤖 MULTI-AGENT CONTENT SYSTEM — ORCHESTRATOR\n**5 specialist agents, each in its own sub-workflow.**\n🔎 Research → ✅ Validator → 🧠 Strategist → 🎨 Creative + Images → 📤 Publisher\n\nRun from the **dashboard**, **Content Form** or **webhook**. `script` format stops after the Strategist.\n\n**First-time setup:** import the 5 sub-workflows, publish them, then select each one in its matching *Agent* node here.",
+        "width": 900,
+        "height": 300,
+        "color": 7
+      },
+      "id": "baaf648a-e115-4eb7-ad03-8e0a174619ed",
+      "name": "Note 6011",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Agent team\nDouble-click an agent node's **View sub-workflow** link to see how that agent works.",
+        "width": 820,
+        "height": 130,
+        "color": 4
+      },
+      "id": "49e6c358-96d6-42eb-8ad4-e13dfe29816a",
+      "name": "Note f349",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        880,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Instagram Multi-Agent Content Factory",
+        "formDescription": "Choose a format and topic. 'script' only sends a reel script to Telegram. 'carousel' and 'image' also create images and can post to Instagram. Image Model is ignored for 'script'. Empty fields use the defaults.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Format",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "script"
+                  },
+                  {
+                    "option": "carousel"
+                  },
+                  {
+                    "option": "image"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Topic",
+              "placeholder": "e.g. ChatGPT Ads for business (leave empty to pick a trending topic)"
+            },
+            {
+              "fieldLabel": "Niche",
+              "placeholder": "Used only when Topic is empty. Default: AI automation and n8n for beginners"
+            },
+            {
+              "fieldLabel": "Audience",
+              "placeholder": "Default: Non-technical Indian learners, students and freelancers"
+            },
+            {
+              "fieldLabel": "Language",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Hinglish"
+                  },
+                  {
+                    "option": "English"
+                  },
+                  {
+                    "option": "Hindi"
+                  }
+                ]
+              },
+              "requiredField": false
+            },
+            {
+              "fieldLabel": "Brand Voice",
+              "placeholder": "Default: Friendly teacher, simple words, practical, no jargon"
+            },
+            {
+              "fieldLabel": "Country",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "IN"
+                  },
+                  {
+                    "option": "US"
+                  },
+                  {
+                    "option": "GB"
+                  },
+                  {
+                    "option": "AE"
+                  }
+                ]
+              },
+              "requiredField": false
+            },
+            {
+              "fieldLabel": "Instructions",
+              "placeholder": "Rules the Validator must follow (leave empty for default rules)",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "Image Model",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "gemini-2.5-flash-image"
+                  },
+                  {
+                    "option": "gemini-3.1-flash-image"
+                  }
+                ]
+              },
+              "requiredField": false
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false,
+          "buttonLabel": "Create content",
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "Submitted! The agents are working. Check Telegram in a few minutes."
+            }
+          }
+        }
+      },
+      "id": "c739a356-de9d-4b21-9b19-72bc1f8cb559",
+      "name": "Content Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        200
+      ],
+      "webhookId": "e093de4c-b2ff-441f-b606-fbaa7857f579"
+    },
+    {
+      "parameters": {
+        "jsCode": "const f = $input.first().json;\nconst v = (k) => String(f[k] || '').trim();\nreturn [{ json: { body: {\n  format: v('Format'), topic: v('Topic'), niche: v('Niche'), audience: v('Audience'),\n  language: v('Language'), brand_voice: v('Brand Voice'), geo: v('Country'),\n  instructions: v('Instructions'), image_model: v('Image Model')\n} } }];"
+      },
+      "id": "bbb5f94b-c90b-4c9b-953f-ef8dfb805034",
+      "name": "Map Form Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ig-content-factory",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "7e0b1192-a0cb-4621-9b99-90144bbe53b9",
+      "name": "Webhook (POST /ig-content-factory)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        220,
+        420
+      ],
+      "webhookId": "c002e287-fa5d-4402-8d6c-e33adcbf55a2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "55f6a804-3a21-4d11-9ada-ce83ee904be2",
+              "name": "niche",
+              "type": "string",
+              "value": "={{ $json.body?.niche || 'AI automation and n8n for beginners' }}"
+            },
+            {
+              "id": "9061d900-2492-4c79-b469-52c359c5a0fe",
+              "name": "audience",
+              "type": "string",
+              "value": "={{ $json.body?.audience || 'Non-technical Indian learners, students and freelancers' }}"
+            },
+            {
+              "id": "00e55631-6dcd-415e-a074-9d80fa22f80a",
+              "name": "language",
+              "type": "string",
+              "value": "={{ $json.body?.language || 'Hinglish (Hindi written in English letters, simple and friendly)' }}"
+            },
+            {
+              "id": "4cc6e04a-53b8-4421-911e-0fe2606acaad",
+              "name": "brand_voice",
+              "type": "string",
+              "value": "={{ $json.body?.brand_voice || 'Friendly teacher, simple words, practical, no jargon, energetic but not hype-y' }}"
+            },
+            {
+              "id": "ce632bfa-da5e-4e40-abdd-f532cd7b2019",
+              "name": "format",
+              "type": "string",
+              "value": "={{ $json.body?.format || 'carousel' }}"
+            },
+            {
+              "id": "4d225e3e-8b81-467c-bc1e-09cd6ca865ec",
+              "name": "geo",
+              "type": "string",
+              "value": "={{ $json.body?.geo || 'IN' }}"
+            },
+            {
+              "id": "e7a75c9b-206f-4902-92b9-cc8396c41584",
+              "name": "instructions",
+              "type": "string",
+              "value": "={{ $json.body?.instructions || 'Ideas must be directly relevant to the niche and useful to the audience. Avoid politics, religion, tragedies, adult, medical or financial guarantees, and anything unverifiable. Prefer practical how-to / tips / explainers. Must be genuinely trending or seasonal right now. No copyrighted characters or real-person likeness.' }}"
+            },
+            {
+              "id": "ed33010f-5dd3-4ebe-9c48-a9617ec1b47c",
+              "name": "imgbb_api_key",
+              "type": "string",
+              "value": "0b19ae9eaa0f59ec089a1100d9805cb1"
+            },
+            {
+              "id": "4fb4599f-eb70-47ae-8ff4-4742285a58c3",
+              "name": "image_model",
+              "type": "string",
+              "value": "={{ $json.body?.image_model || 'gemini-2.5-flash-image' }}"
+            },
+            {
+              "id": "f12ed8ed-28a9-407e-9b11-e37b06006a86",
+              "name": "topic",
+              "type": "string",
+              "value": "={{ $json.body?.topic || '' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5522da23-c804-4567-b95d-e370da631b5f",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "14c7fb8c-e4e9-4cce-bc52-0330b398bb6a",
+              "leftValue": "={{ String($('Config').first().json.format).toLowerCase().trim() }}",
+              "rightValue": "script",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "61302de5-5a21-4081-9491-bdaebb9c0632",
+      "name": "Script only?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "1464300930",
+        "text": "={{ ('🎬 REEL SCRIPT\\n\\n🧠 Topic: ' + $('Agent 3 - Strategist').first().json.strategy.chosen_topic + '\\n🎣 Hook: ' + $('Agent 3 - Strategist').first().json.strategy.hook + '\\n\\n' + $('Agent 3 - Strategist').first().json.strategy.script_scenes.map((x, i) => '▶️ Scene ' + (x.scene || i + 1) + '\\n🎥 Visual: ' + x.visual + '\\n🎙 Voiceover: ' + x.voiceover).join('\\n\\n') + '\\n\\n📣 CTA: ' + $('Agent 3 - Strategist').first().json.strategy.cta + '\\n\\n📝 Caption:\\n' + $('Agent 3 - Strategist').first().json.strategy.caption + '\\n\\n' + $('Agent 3 - Strategist').first().json.strategy.hashtags.join(' ')).slice(0, 3800).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "78b9733b-7994-4653-83dd-26c7a2b0fb86",
+      "name": "Telegram: Script Only",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1800,
+        100
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "Jx8AgPVooomTacHF",
+          "name": "Harshal telegram api"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { config: $('Config').first().json } }];"
+      },
+      "id": "e7e0656f-e1d4-4223-b319-3e98e88e25bf",
+      "name": "Prepare Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "b57450de-04b2-4eaf-bfff-3a2b060aee6b",
+      "name": "Agent 1 - Research",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "c80c7cb2-e5f7-40c9-8d5d-b4131ad46089",
+      "name": "Agent 2 - Validator",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1120,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "df573786-f3c4-4c49-a666-62db74c81a7e",
+      "name": "Agent 3 - Strategist",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1340,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "14b32f5b-e1bc-459e-8d48-d9f4f2290ffe",
+      "name": "Agent 4 - Creative + Images",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1800,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "30df9048-44e3-4b94-b5cc-5f2d30181efb",
+      "name": "Agent 5 - Publisher",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2060,
+        420
+      ]
+    }
+  ],
+  "connections": {
+    "Content Form": {
+      "main": [
+        [
+          {
+            "node": "Map Form Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Form Fields": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook (POST /ig-content-factory)": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Prepare Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Context": {
+      "main": [
+        [
+          {
+            "node": "Agent 1 - Research",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 1 - Research": {
+      "main": [
+        [
+          {
+            "node": "Agent 2 - Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 2 - Validator": {
+      "main": [
+        [
+          {
+            "node": "Agent 3 - Strategist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 3 - Strategist": {
+      "main": [
+        [
+          {
+            "node": "Script only?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 4 - Creative + Images": {
+      "main": [
+        [
+          {
+            "node": "Agent 5 - Publisher",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Script only?": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Script Only",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Agent 4 - Creative + Images",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
