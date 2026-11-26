@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Multi-Agent Content System</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNCIgZmlsbD0iIzA4MDkwYiIvPjxwYXRoIGQ9Ik0xNiA1IDI3IDE2IDE2IDI3IDUgMTZaIiBmaWxsPSIjNzM5NmZmIi8+PHBhdGggZD0ibTE2IDExIDUgNS01IDUtNS01WiIgZmlsbD0iIzA4MDkwYiIvPjwvc3ZnPg0KDQo=">
+<style>
+  :root { --bg:#f5f6fa; --card:#fff; --text:#171a2b; --muted:#667085; --line:#e3e6ee; --accent:#5b4bdb; --soft:#efedfd; --ok:#067647; --okbg:#ecfdf3; --err:#b42318; --errbg:#fef3f2; --warnbg:#fffaeb; --warn:#93540a; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0f111a; --card:#181b27; --text:#eceef6; --muted:#98a1b8; --line:#2c3042; --accent:#8f81ff; --soft:#252242; --ok:#75e0a7; --okbg:#0c2a1c; --err:#fda29b; --errbg:#33130f; --warnbg:#2e2208; --warn:#fec84b; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  main { max-width:680px; margin:0 auto; padding:32px 16px 64px; }
+  h1 { font-size:22px; margin:0; }
+  .brand { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
+  /* Phaze AI wordmark, styled after the header on phazeai.com */
+  .logo { display:flex; align-items:center; gap:9px; padding:8px 14px; border-radius:9px; background:#08090b; color:#f2f3f5; font:800 21px/1.2 "Inter Tight",Inter,Arial,sans-serif; letter-spacing:-.8px; white-space:nowrap; }
+  .logo i { width:10px; height:10px; border-radius:2px; background:#7396ff; box-shadow:0 0 18px #6284ff75; transform:rotate(45deg); }
+  .logo span { font-weight:500; }
+  .pipeline { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:18px; padding:0; list-style:none; }
+  .pipeline li { font-size:12.5px; padding:4px 10px; border:1px solid var(--line); border-radius:99px; background:var(--card); }
+  .pipeline li.off { opacity:.35; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:14px; }
+  .label { display:block; font-weight:600; font-size:13.5px; margin-bottom:6px; }
+  .hint { font-weight:400; color:var(--muted); }
+  .field { margin-bottom:16px; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:0 14px; }
+  @media (max-width:560px) { .row, .formats { grid-template-columns:1fr !important; } }
+  input, textarea, .dd-btn { width:100%; font:inherit; color:var(--text); background:var(--card); border:1px solid var(--line); border-radius:9px; padding:10px 12px; }
+  textarea { resize:vertical; min-height:76px; }
+  input:focus-visible, textarea:focus-visible, button:focus-visible, summary:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+  .formats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:18px; }
+  .fmt { font:inherit; color:var(--text); text-align:left; background:var(--card); border:1px solid var(--line); border-radius:11px; padding:12px; cursor:pointer; }
+  .fmt b { display:block; } .fmt span { font-size:12.5px; color:var(--muted); }
+  .fmt[aria-checked="true"] { border-color:var(--accent); background:var(--soft); box-shadow:0 0 0 1px var(--accent); }
+  .dd { position:relative; }
+  .dd-btn { display:flex; justify-content:space-between; align-items:center; gap:8px; cursor:pointer; text-align:left; }
+  .dd-btn::after { content:"▾"; color:var(--muted); }
+  .dd-list { position:absolute; z-index:5; left:0; right:0; top:calc(100% + 4px); margin:0; padding:5px; list-style:none; background:var(--card); border:1px solid var(--line); border-radius:10px; box-shadow:0 12px 28px rgba(0,0,0,.18); max-height:240px; overflow:auto; }
+  .dd-list li { padding:8px 10px; border-radius:7px; cursor:pointer; }
+  .dd-list li.active { background:var(--soft); }
+  .dd-list li[aria-selected="true"]::after { content:"✓"; float:right; color:var(--accent); }
+  [hidden] { display:none !important; }
+  details summary { cursor:pointer; font-weight:600; font-size:13.5px; }
+  details[open] summary { margin-bottom:14px; }
+  .note { border-radius:9px; padding:10px 12px; font-size:13.5px; margin-bottom:14px; background:var(--warnbg); color:var(--warn); }
+  .go { width:100%; font:inherit; font-weight:600; color:#fff; background:#5b4bdb; border:0; border-radius:10px; padding:13px; cursor:pointer; }
+  .go:disabled { opacity:.6; cursor:wait; }
+  .status { margin-top:12px; border-radius:9px; padding:11px 13px; font-size:14px; }
+  .status.ok { background:var(--okbg); color:var(--ok); } .status.err { background:var(--errbg); color:var(--err); }
+  pre { background:var(--bg); border-radius:8px; padding:12px; overflow:auto; font-size:12.5px; margin:0; white-space:pre-wrap; word-break:break-word; }
+  .history { list-style:none; padding:0; margin:0; font-size:13.5px; }
+  .history li { padding:6px 0; border-top:1px solid var(--line); }
+</style>
+</head>
+<body>
+<main>
+  <header class="brand">
+    <div class="logo" role="img" aria-label="Phaze AI"><i aria-hidden="true"></i><div>Phaze <span>AI</span></div></div>
+    <h1>Multi-Agent Content System</h1>
+  </header>
+  <ul class="pipeline" id="pipeline" aria-label="Stages used by this format"></ul>
+
+  <form id="form" class="card" novalidate>
+    <span class="label" id="fmtLabel">What do you want to create?</span>
+    <div class="formats" role="radiogroup" aria-labelledby="fmtLabel" id="formats"></div>
+
+    <div class="field">
+      <label class="label" for="topic">Topic <span class="hint">(leave empty to pick a trending one)</span></label>
+      <input id="topic" placeholder="e.g. ChatGPT Ads for business">
+    </div>
+
+    <div class="row" id="trendFields">
+      <div class="field">
+        <label class="label" for="niche">Niche <span class="hint">(for trending ideas)</span></label>
+        <input id="niche" placeholder="AI automation and n8n for beginners">
+      </div>
+      <div class="field"><span class="label">Trend country</span><div class="dd" data-name="geo"></div></div>
+    </div>
+
+    <div class="row">
+      <div class="field"><span class="label">Language</span><div class="dd" data-name="language"></div></div>
+      <div class="field"><span class="label">Brand voice</span><div class="dd" data-name="brand_voice"></div></div>
+    </div>
+
+    <div class="field" id="imageField"><span class="label">Image model</span><div class="dd" data-name="image_model"></div></div>
+
+    <div class="field">
+      <details>
+        <summary>More options</summary>
+        <div class="field">
+          <label class="label" for="audience">Audience</label>
+          <input id="audience" placeholder="Non-technical Indian learners, students and freelancers">
+        </div>
+        <div class="field">
+          <label class="label" for="instructions">Validator rules <span class="hint">(replaces the default rules)</span></label>
+          <textarea id="instructions" placeholder="Leave empty to use the default rules"></textarea>
+        </div>
+      </details>
+    </div>
+
+    <div class="field">
+      <label class="label" for="password">Dashboard password</label>
+      <input id="password" type="password" autocomplete="current-password">
+    </div>
+
+    <div class="note" id="postNote">This format can publish to your real Instagram account if <b>auto_post</b> is true in the workflow.</div>
+    <button class="go" id="go" type="submit"></button>
+    <div class="status" id="status" role="status" aria-live="polite" hidden></div>
+  </form>
+
+  <div class="card"><details><summary>Request preview</summary><pre id="payload"></pre></details></div>
+
+  <div class="card" id="historyCard" hidden><span class="label">Sent in this session</span><ul class="history" id="history"></ul></div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+const FORMATS = {
+  script:   { title: 'Reel script', text: 'Script and caption to Telegram', images: false, button: 'Generate script' },
+  carousel: { title: 'Carousel',    text: 'Multiple slides, can post',      images: true,  button: 'Create carousel' },
+  image:    { title: 'Single image', text: 'One image, can post',           images: true,  button: 'Create image post' }
+};
+const STAGES = [['Research'], ['Validator'], ['Strategist'], ['Creative', true], ['Publisher QA', true], ['Images', true], ['Telegram'], ['Instagram', true]];
+const OPTIONS = {
+  language: [['Hinglish', 'Hinglish'], ['English', 'English'], ['Hindi', 'Hindi']],
+  geo: [['IN', 'India'], ['US', 'United States'], ['GB', 'United Kingdom'], ['AE', 'UAE']],
+  brand_voice: [['', 'Friendly teacher (default)'], ['Professional, clear and confident, no hype', 'Professional'], ['Fun, casual and playful, short punchy lines', 'Fun and casual'], ['Bold, direct and motivational', 'Bold and motivational']],
+  image_model: [['gemini-2.5-flash-image', 'Gemini 2.5 Flash Image'], ['gemini-3.1-flash-image', 'Gemini 3.1 Flash Image']]
+};
+
+const state = { format: 'script', language: 'Hinglish', geo: 'IN', brand_voice: '', image_model: 'gemini-2.5-flash-image' };
+let confirmArmed = false, sending = false;
+
+function buildDropdown(root) {
+  const name = root.dataset.name, opts = OPTIONS[name];
+  const btn = document.createElement('button'), list = document.createElement('ul');
+  const label = root.parentElement.querySelector('.label').textContent;
+  btn.type = 'button'; btn.className = 'dd-btn'; btn.setAttribute('role', 'combobox');
+  btn.setAttribute('aria-haspopup', 'listbox'); btn.setAttribute('aria-expanded', 'false'); btn.setAttribute('aria-controls', 'list-' + name);
+  list.className = 'dd-list'; list.id = 'list-' + name; list.setAttribute('role', 'listbox'); list.setAttribute('aria-label', label); list.hidden = true;
+  let active = 0;
+  const items = opts.map(([value, text], i) => {
+    const li = document.createElement('li');
+    li.id = `opt-${name}-${i}`; li.setAttribute('role', 'option'); li.textContent = text;
+    li.addEventListener('mousedown', (e) => e.preventDefault());
+    li.addEventListener('click', () => choose(i));
+    li.addEventListener('mousemove', () => highlight(i));
+    list.appendChild(li); return li;
+  });
+  function paint() {
+    const i = Math.max(0, opts.findIndex((o) => o[0] === state[name]));
+    btn.textContent = opts[i][1]; btn.setAttribute('aria-label', `${label}: ${opts[i][1]}`);
+    items.forEach((li, n) => li.setAttribute('aria-selected', String(n === i)));
+  }
+  function highlight(i) {
+    active = (i + opts.length) % opts.length;
+    items.forEach((li, n) => li.classList.toggle('active', n === active));
+    btn.setAttribute('aria-activedescendant', items[active].id);
+  }
+  function open(show) {
+    list.hidden = !show; btn.setAttribute('aria-expanded', String(show));
+    if (show) highlight(Math.max(0, opts.findIndex((o) => o[0] === state[name])));
+    else btn.removeAttribute('aria-activedescendant');
+  }
+  function choose(i) { state[name] = opts[i][0]; paint(); open(false); refresh(); }
+  btn.addEventListener('click', () => open(list.hidden));
+  btn.addEventListener('blur', () => open(false));
+  btn.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (list.hidden) open(true); else highlight(active + (e.key === 'ArrowDown' ? 1 : -1)); }
+    else if ((e.key === 'Enter' || e.key === ' ') && !list.hidden) { e.preventDefault(); choose(active); }
+    else if (e.key === 'Escape') open(false);
+  });
+  root.append(btn, list); paint();
+}
+
+function buildFormats() {
+  const keys = Object.keys(FORMATS);
+  keys.forEach((key) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'fmt'; b.dataset.format = key; b.setAttribute('role', 'radio');
+    b.innerHTML = `<b>${FORMATS[key].title}</b><span>${FORMATS[key].text}</span>`;
+    b.addEventListener('click', () => { state.format = key; refresh(); });
+    b.addEventListener('keydown', (e) => {
+      const step = ['ArrowRight', 'ArrowDown'].includes(e.key) ? 1 : ['ArrowLeft', 'ArrowUp'].includes(e.key) ? -1 : 0;
+      if (!step) return;
+      e.preventDefault();
+      state.format = keys[(keys.indexOf(key) + step + keys.length) % keys.length];
+      refresh(); document.querySelector(`[data-format="${state.format}"]`).focus();
+    });
+    $('formats').appendChild(b);
+  });
+}
+
+// Only fields that matter for the chosen format (and topic) are sent. Empty ones use the workflow defaults.
+function buildPayload() {
+  const text = (id) => $(id).value.trim();
+  const topic = text('topic');
+  const data = { format: state.format, topic, language: state.language, brand_voice: state.brand_voice, audience: text('audience'), instructions: text('instructions') };
+  if (!topic) { data.niche = text('niche'); data.geo = state.geo; }
+  if (FORMATS[state.format].images) data.image_model = state.image_model;
+  return Object.fromEntries(Object.entries(data).filter(([, v]) => v !== ''));
+}
+
+function refresh() {
+  confirmArmed = false;
+  const f = FORMATS[state.format];
+  document.querySelectorAll('.fmt').forEach((b) => {
+    const on = b.dataset.format === state.format;
+    b.setAttribute('aria-checked', String(on)); b.tabIndex = on ? 0 : -1;
+  });
+  $('trendFields').hidden = Boolean($('topic').value.trim());
+  $('imageField').hidden = !f.images;
+  $('postNote').hidden = !f.images;
+  $('pipeline').innerHTML = STAGES.map(([n, imagesOnly]) => `<li class="${imagesOnly && !f.images ? 'off' : ''}">${n}</li>`).join('');
+  if (!sending) $('go').textContent = f.button;
+  $('payload').textContent = JSON.stringify(buildPayload(), null, 2);
+}
+
+function showStatus(type, message) { const s = $('status'); s.hidden = false; s.className = 'status ' + type; s.textContent = message; }
+
+function addHistory(payload, result) {
+  $('historyCard').hidden = false;
+  const li = document.createElement('li');
+  li.textContent = `${new Date().toLocaleTimeString()} · ${FORMATS[payload.format].title} · ${payload.topic || 'trending topic'} · ${result}`;
+  $('history').prepend(li);
+}
+
+$('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (sending) return;
+  const password = $('password').value;
+  if (!password) { $('password').focus(); return showStatus('err', 'Enter the dashboard password.'); }
+  const payload = buildPayload();
+  if (FORMATS[payload.format].images && !confirmArmed) {
+    confirmArmed = true; $('go').textContent = 'Click again to confirm (may post to Instagram)';
+    return;
+  }
+  confirmArmed = false; sending = true; $('go').disabled = true; $('go').textContent = 'Sending…'; $('status').hidden = true;
+  const abort = new AbortController(), timer = setTimeout(() => abort.abort(), 30000);
+  try {
+    const res = await fetch('/api/run', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-dashboard-password': password }, body: JSON.stringify(payload), signal: abort.signal });
+    if (res.ok) {
+      showStatus('ok', 'Workflow started. The agents are working. Check Telegram for the result.');
+      addHistory(payload, 'started');
+    } else {
+      const reply = await res.json().catch(() => ({}));
+      showStatus('err', reply.error || `Error ${res.status}`); addHistory(payload, 'failed');
+    }
+  } catch (err) {
+    showStatus('err', 'No reply from the server. Check n8n Executions before sending again, in case the request arrived.');
+    addHistory(payload, 'no reply');
+  } finally {
+    clearTimeout(timer); sending = false; $('go').disabled = false; $('go').textContent = FORMATS[state.format].button;
+  }
+});
+
+['topic', 'niche', 'audience', 'instructions'].forEach((id) => $(id).addEventListener('input', refresh));
+document.querySelectorAll('.dd').forEach(buildDropdown);
+buildFormats();
+refresh();
+</script>
+</body>
+</html>
